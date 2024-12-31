@@ -6,7 +6,8 @@
 	<skin>
 		<groupId>org.apache.maven.skins</groupId>
 		<artifactId>maven-fluido-skin</artifactId>
-		<version>2.0.1</version>
+				<version>2.0.1</version>
+
 	</skin>
 
 	<custom>
@@ -20,7 +21,7 @@
 	<version position="right" />
 
 	<bannerLeft>
-		<name>Calculator Application</name>
+		<name>LegalCase Application</name>
 		<src>images/logo.png</src>
 		<href>https://github.com/ucoruh/eclipse-java-maven-template</href>
 	</bannerLeft>
@@ -35,7 +36,7 @@
 	</poweredBy>
 
 	<body>
-		<head>Calculator App</head>
+		<head>LegalCase App</head>
 		<!-- Add any additional meta tags, CSS files, or JavaScript files -->
 
 		<menu name="Overview">

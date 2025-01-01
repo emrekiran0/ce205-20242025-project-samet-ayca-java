@@ -843,4 +843,290 @@ public class LegalCaseTest {
       assertTrue(output.contains("Invalid input! Please enter a valid case title."));
       assertTrue(output.contains("Enter the Case Title to search: "));
 }
+@Test
+public void testsearchByID() throws IOException {
+   
+    TestUtility.createTestCaseFile();
+    String input = "1\n\n"; 
+    System.setIn(new ByteArrayInputStream(input.getBytes())); 
+    Scanner testScanner = new Scanner(System.in);
+    LegalCase legalcase = new LegalCase(testScanner, new PrintStream(outContent));
+    System.setOut(new PrintStream(outContent));
+    boolean result = LegalCase.searchByID();
+    assertTrue(result); 
+}
+
+@Test
+public void testsearchByID_NoMatch() throws IOException {
+    
+    TestUtility.createTestCaseFile();
+    String input = "178\n\n"; 
+    System.setIn(new ByteArrayInputStream(input.getBytes())); 
+    Scanner testScanner = new Scanner(System.in);
+    LegalCase legalcase = new LegalCase(testScanner, new PrintStream(outContent));
+    System.setOut(new PrintStream(outContent));
+    boolean result = LegalCase.searchByID();
+    assertTrue(result); 
+}
+
+@Test
+public void testSearchInHashTable() {
   
+    int caseIDToSearch = 101;
+    LegalCase case1 = new LegalCase(101, "Test Case 1", "Plaintiff 1", "Defendant 1", "Civil", "01/01/2023", "05/01/2023");
+
+    LegalCase.hashTableCases = new LegalCase[LegalCase.TABLE_SIZE];
+    LegalCase.hashTableProbing = new int[LegalCase.TABLE_SIZE];
+    Arrays.fill(LegalCase.hashTableProbing, -1);
+
+    int index = LegalCase.hashFunction(case1.caseID, LegalCase.TABLE_SIZE);
+    LegalCase.hashTableCases[index] = case1;
+    LegalCase.hashTableProbing[index] = case1.caseID;
+
+    
+    assertEquals(case1, LegalCase.searchInHashTable(caseIDToSearch));
+
+    
+    assertNull(LegalCase.searchInHashTable(999));
+}
+
+
+@Test
+public void testsearchByID_İnvalidİnput() throws IOException {
+   
+    TestUtility.createTestCaseFile();
+    String input = "x\n1\n\n"; 
+    System.setIn(new ByteArrayInputStream(input.getBytes()));
+    Scanner testScanner = new Scanner(System.in);
+    LegalCase legalcase = new LegalCase(testScanner, new PrintStream(outContent));
+    System.setOut(new PrintStream(outContent));
+    boolean result = LegalCase.searchByID();
+    assertTrue(result); 
+}
+
+
+@Test
+public void testdeleteCaset() throws IOException {
+    
+    TestUtility.createTestCaseFile();
+    String input = "1\n\n"; 
+    System.setIn(new ByteArrayInputStream(input.getBytes())); 
+    Scanner testScanner = new Scanner(System.in);
+    LegalCase legalcase = new LegalCase(testScanner, new PrintStream(outContent));
+    System.setOut(new PrintStream(outContent));
+    boolean result = LegalCase.deleteCase();
+    assertTrue(result); 
+}
+
+@Test
+public void testdeleteCase_InvalidInput() throws IOException {
+  
+    TestUtility.createTestCaseFile();
+    String input = "19\n\n";
+    System.setIn(new ByteArrayInputStream(input.getBytes())); 
+    Scanner testScanner = new Scanner(System.in);
+    LegalCase legalcase = new LegalCase(testScanner, new PrintStream(outContent));
+    System.setOut(new PrintStream(outContent));
+    boolean result = LegalCase.deleteCase();
+    assertFalse(result); 
+}
+
+@Test
+public void testdeleteCase_NonNumericInput() throws IOException {
+   
+    TestUtility.createTestCaseFile();
+    String input = "An\n1\n\n"; 
+    System.setIn(new ByteArrayInputStream(input.getBytes()));
+    Scanner testScanner = new Scanner(System.in);
+    LegalCase legalcase = new LegalCase(testScanner, new PrintStream(outContent));
+    System.setOut(new PrintStream(outContent));
+    boolean result = LegalCase.deleteCase();
+    assertFalse(result); 
+}
+
+@Test
+public void incorrectDeletionCase() throws IOException {
+ 
+    TestUtility.createTestCaseFile();
+    String input = "yn"; 
+    System.setIn(new ByteArrayInputStream(input.getBytes()));
+    Scanner testScanner = new Scanner(System.in);
+    LegalCase legalcase = new LegalCase(testScanner, new PrintStream(outContent));
+    System.setOut(new PrintStream(outContent));
+    boolean result = LegalCase.incorrectDeletionCase();
+    assertFalse(result); 
+}
+
+
+@Test
+public void testPopDeletedCase_WithPreloadedCases() {
+    
+    TestUtility.createTestCaseFile();
+    
+    
+    LegalCase testCase = new LegalCase(1, "Case1", "Plaintiff1", "Defendant1", "Type1", "01/01/2023", "05/05/2023");
+    LegalCase.deletedCasesStack.push(testCase);
+
+   
+    LegalCase result = LegalCase.popDeletedCase();
+    assertNotNull(result); 
+    assertEquals(1, result.caseID); 
+    assertTrue(LegalCase.deletedCasesStack.isEmpty()); 
+}
+
+@Test
+public void testIsDeleted_WithPreloadedCases() {
+   
+    TestUtility.createTestCaseFile();
+    
+
+    LegalCase testCase = new LegalCase(3, "Case3", "Plaintiff3", "Defendant3", "Type3", "03/01/2023", "07/07/2023");
+    LegalCase.deletedCasesStack.push(testCase);
+
+  
+    assertTrue(LegalCase.isDeleted(3)); 
+    
+}
+
+@Test
+public void testUndoDeleteCase_SuccessfulUndo() throws IOException, ClassNotFoundException {
+  
+    LegalCase case1 = new LegalCase(1, "Case1", "Plaintiff1", "Defendant1", "Type1", "01/01/2023", "05/05/2023");
+    LegalCase.pushDeletedCase(case1);
+    
+    ByteArrayOutputStream outContent = new ByteArrayOutputStream();
+    System.setOut(new PrintStream(outContent));
+    boolean result = LegalCase.undoDeleteCase();
+    String output = outContent.toString();
+    assertTrue(result);
+}
+
+
+@Test
+public void testDoubleHashingInsert() {
+   
+    LegalCase.TABLE_SIZE = 10;
+
+    LegalCase.hashTableProbing = new int[LegalCase.TABLE_SIZE];
+    for (int i = 0; i < LegalCase.TABLE_SIZE; i++) {
+        LegalCase.hashTableProbing[i] = -1;
+    }
+  
+    int caseID = 123456;
+    boolean result = LegalCase.doubleHashingInsert(caseID);
+    
+    assertTrue("Case ID should be successfully inserted into the hash table.", result);
+   
+    int expectedIndex = LegalCase.doubleHashing(caseID, 0);
+   
+    for (int i = 1; i < LegalCase.TABLE_SIZE; i++) {
+        LegalCase.doubleHashingInsert(caseID + i); 
+    }
+    
+    result = LegalCase.doubleHashingInsert(caseID + 1000);
+}
+
+@Test
+public void testUndoDeletedCase() {
+   
+    LegalCase.deletedCasesStack.clear();
+  
+    LegalCase testCase = new LegalCase(12345, "Civil", "Test Title", "John Doe", "Jane Doe", "01/01/2024", "02/02/2024");
+    LegalCase.deletedCasesStack.push(testCase); 
+    
+    String input = "y\n"; 
+    System.setIn(new ByteArrayInputStream(input.getBytes()));
+  
+    ByteArrayOutputStream outContent = new ByteArrayOutputStream();
+    PrintStream testPrintStream = new PrintStream(outContent);
+   
+    LegalCase.scanner = new Scanner(System.in);
+    LegalCase.out = testPrintStream;
+    
+    boolean result = LegalCase.incorrectDeletionCase();
+   
+    assertTrue("Undo operation should be successful.", result);
+   
+    String output = outContent.toString();
+    assertTrue("Last deleted case details should be displayed.", output.contains("Last deleted case details:"));
+    assertTrue("Correct case ID should be displayed.", output.contains("Case ID: 12345"));
+    assertTrue("Undo success message should be displayed.", output.contains("Undo successful for Case ID: 12345"));
+}
+
+
+@Test
+public void testNoPlaintiffsFound() {
+    
+    ByteArrayOutputStream outContent = new ByteArrayOutputStream();
+    PrintStream originalOut = System.out;
+    System.setOut(new PrintStream(outContent));
+
+    try {
+      
+        File file = new File(LegalCase.FILE_NAME);
+        if (file.exists()) {
+        }
+
+      
+        boolean result = LegalCase.displayPlaintiffs();
+
+    
+        assertFalse("Function should return false when no plaintiffs are found.", result);
+        String output = outContent.toString();
+    } finally {
+      
+        System.setOut(originalOut);
+    }
+}
+
+@Test
+public void testdocumentstoalldocuments() throws IOException {
+   
+    TestUtility.createTestCaseFile();
+    String input = "1\n\n4\n"; 
+    System.setIn(new ByteArrayInputStream(input.getBytes()));
+    Scanner testScanner = new Scanner(System.in);
+    LegalCase legalcase = new LegalCase(testScanner, new PrintStream(outContent));
+    System.setOut(new PrintStream(outContent));
+    boolean result = LegalCase.documents();
+    assertTrue(result); 
+}
+
+@Test
+public void testdocumentstosearchingWithCaseTitle2() throws IOException {
+  
+    TestUtility.createTestCaseFile();
+    String input = "2\nc\n\n4\n"; 
+    System.setIn(new ByteArrayInputStream(input.getBytes()));
+    Scanner testScanner = new Scanner(System.in);
+    LegalCase legalcase = new LegalCase(testScanner, new PrintStream(outContent));
+    System.setOut(new PrintStream(outContent));
+    boolean result = LegalCase.documents();
+    assertTrue(result); 
+}
+
+@Test
+public void testdocumentstosearchingWithCaseID() throws IOException {
+  
+    TestUtility.createTestCaseFile();
+    String input = "3\n125\n\n4\n"; 
+    System.setIn(new ByteArrayInputStream(input.getBytes()));
+    Scanner testScanner = new Scanner(System.in);
+    LegalCase legalcase = new LegalCase(testScanner, new PrintStream(outContent));
+    System.setOut(new PrintStream(outContent));
+    boolean result = LegalCase.documents();
+    assertTrue(result); 
+}
+
+@Test
+public void testdocumentstosearchingWithCaseTitle() throws IOException {
+  
+    TestUtility.createTestCaseFile();
+    String input = "2\\cn\n4\n"; 
+    System.setIn(new ByteArrayInputStream(input.getBytes()));
+    Scanner testScanner = new Scanner(System.in);
+    LegalCase legalcase = new LegalCase(testScanner, new PrintStream(outContent));
+    System.setOut(new PrintStream(outContent));
+    boolean result = LegalCase.documents();
+    assertTrue(result); 
+}

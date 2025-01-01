@@ -190,4 +190,190 @@ public class LegalCaseTest {
       boolean result = legalcase.caseTracking();
       assertTrue(result);
   }
+   
+
   
+  @Test
+  public void testCaseTrackingtocasesDates() throws IOException {
+	  String input = "5\n\n10\n"; 
+	  System.setIn(new ByteArrayInputStream(input.getBytes()));
+      Scanner testScanner = new Scanner(System.in);
+      legalcase = new LegalCase(testScanner, new PrintStream(outContent));
+      boolean result = legalcase.caseTracking();
+      assertTrue(result);
+  }
+  
+  
+  
+  @Test
+  public void testCaseTrackingtodisplayPlaintiffs() throws IOException {
+	  String input = "6\nQ\n\n10\n"; 
+	  System.setIn(new ByteArrayInputStream(input.getBytes()));
+      Scanner testScanner = new Scanner(System.in);
+      legalcase = new LegalCase(testScanner, new PrintStream(outContent));
+      boolean result = legalcase.caseTracking();
+      assertTrue(result);
+  }
+  
+  
+  @Test
+  public void testCaseTrackingtocasesThatMayBeConnectedMenu() throws IOException {
+	  String input = "7\n11\n\n10\n"; 
+	  System.setIn(new ByteArrayInputStream(input.getBytes()));
+      Scanner testScanner = new Scanner(System.in);
+      legalcase = new LegalCase(testScanner, new PrintStream(outContent));
+      boolean result = legalcase.caseTracking();
+      assertTrue(result);
+  }
+  
+  @Test
+  public void testCaseTrackingtocasesThatMayAriseMenu() throws IOException {
+	  String input = "8\n1\n\n\n10\n"; 
+	  System.setIn(new ByteArrayInputStream(input.getBytes()));
+      Scanner testScanner = new Scanner(System.in);
+      legalcase = new LegalCase(testScanner, new PrintStream(outContent));
+      boolean result = legalcase.caseTracking();
+      assertTrue(result);
+  }
+  
+  @Test
+  public void testCaseTrackingtoshortbyID() throws IOException {
+	  String input = "9\n\n\n10\n"; 
+	  System.setIn(new ByteArrayInputStream(input.getBytes()));
+      Scanner testScanner = new Scanner(System.in);
+      legalcase = new LegalCase(testScanner, new PrintStream(outContent));
+      boolean result = legalcase.caseTracking();
+      assertTrue(result);
+  }
+  
+
+   
+  @Test
+  public void testCaseTrackingınvalidchoice() throws IOException {
+	  String input = "11\n\n\n10\n"; 
+	  System.setIn(new ByteArrayInputStream(input.getBytes()));
+      Scanner testScanner = new Scanner(System.in);
+      legalcase = new LegalCase(testScanner, new PrintStream(outContent));
+      boolean result = legalcase.caseTracking();
+      assertTrue(result);
+  }
+  
+  @Test
+  public void testAddCaseQuadraticProbing_ValidInput() throws IOException {
+	  String input = "1\n1\nOriginal Title\nJohn Doe\nJane Smith\nCivil\n01/01/2023\n\n10\n";
+	  System.setIn(new ByteArrayInputStream(input.getBytes()));
+   Scanner testScanner = new Scanner(System.in);
+  legalcase = new LegalCase(testScanner, new PrintStream(outContent));
+  boolean result = legalcase.addCase();
+  assertTrue(result);
+  }
+  
+  
+  @Test
+  public void testAddCaseProgressiveOverflow_ValidInput() throws IOException {
+   String input = "2\n1\nOriginal Title\nJohn Doe\nJane Smith\nCivil\n01/01/2023\n\n10\n";
+   System.setIn(new ByteArrayInputStream(input.getBytes()));
+   Scanner testScanner = new Scanner(System.in);
+   legalcase = new LegalCase(testScanner, new PrintStream(outContent));
+   boolean result = legalcase.addCase();
+   assertTrue(result);
+  }
+  
+  @Test
+  public void testAddCaseLinearProbing_ValidInput() throws IOException {
+	   String input = "3\n1\nOriginal Title\nJohn Doe\nJane Smith\nCivil\n01/01/2023\n\n10\n";
+	   System.setIn(new ByteArrayInputStream(input.getBytes()));
+	   Scanner testScanner = new Scanner(System.in);
+	   legalcase = new LegalCase(testScanner, new PrintStream(outContent));
+	   boolean result = legalcase.addCase();
+	   assertTrue(result); 
+}
+  
+  @Test
+  public void testAddCaseDoubleHashing_ValidInput() throws IOException {
+	   String input = "4\n1\nOriginal Title\nJohn Doe\nJane Smith\nCivil\n01/01/2023\n\n10\n";
+	   System.setIn(new ByteArrayInputStream(input.getBytes()));
+	   Scanner testScanner = new Scanner(System.in);
+	   legalcase = new LegalCase(testScanner, new PrintStream(outContent));
+	   boolean result = legalcase.addCase();
+	   assertTrue(result); 
+  }
+
+ 
+  @Test
+  public void testAddCaseInvalidDateFormat() throws IOException {
+      
+      String input = "1\n1\nTest Title\nJohn Doe\nJane Smith\nCivil\n32/13/abcd\n01/01/2023\n\n10\n";
+      System.setIn(new ByteArrayInputStream(input.getBytes())); 
+      Scanner testScanner = new Scanner(System.in);
+      LegalCase legalcase = new LegalCase(testScanner, new PrintStream(outContent));
+      boolean result = legalcase.addCase();
+      assertTrue(result); 
+  }
+  
+  @Test
+  public void testAddCaseIncompleteDate() throws IOException {
+     
+      String input = "1\n1\nTest Title\nJohn Doe\nJane Smith\nCivil\n01/2023\n01/01/2023\n\n10\n";
+      System.setIn(new ByteArrayInputStream(input.getBytes())); 
+      Scanner testScanner = new Scanner(System.in);
+      LegalCase legalcase = new LegalCase(testScanner, new PrintStream(outContent));
+      boolean result = legalcase.addCase();
+      assertTrue(result); 
+  }
+  
+  @Test
+  public void testCurrentCasesNavigation() throws IOException {
+      
+      TestUtility.createTestCaseFile();
+      String input = "N\nP\nQ\n"; 
+      System.setIn(new ByteArrayInputStream(input.getBytes())); 
+      Scanner testScanner = new Scanner(System.in);
+      LegalCase legalcase = new LegalCase(testScanner, new PrintStream(outContent));
+      System.setOut(new PrintStream(outContent));
+      boolean result = LegalCase.currentCases();
+      assertTrue(result);
+  }
+
+  
+  @Test
+  public void testCurrentCasesInvalidİnput() throws IOException {
+     
+      TestUtility.createTestCaseFile();
+      String input = "x\nN\nP\nQ\n"; 
+      System.setIn(new ByteArrayInputStream(input.getBytes())); 
+      Scanner testScanner = new Scanner(System.in);
+      LegalCase legalcase = new LegalCase(testScanner, new PrintStream(outContent));
+      System.setOut(new PrintStream(outContent));
+      boolean result = LegalCase.currentCases();
+      assertTrue(result);
+  }
+  
+  
+  @Test
+  public void testCaseDates() throws IOException {
+      
+      TestUtility.createTestCaseFile(); 
+      String input = "\n"; 
+      System.setIn(new ByteArrayInputStream(input.getBytes())); 
+      Scanner testScanner = new Scanner(System.in);
+      LegalCase legalcase = new LegalCase(testScanner, new PrintStream(outContent));
+      System.setOut(new PrintStream(outContent));
+      boolean result = LegalCase.caseDates();
+      assertTrue(result);
+
+  }
+  
+  @Test
+  public void test() throws IOException {
+   
+      TestUtility.createTestCaseFile(); 
+      String input = "\n\n"; 
+      System.setIn(new ByteArrayInputStream(input.getBytes())); 
+      Scanner testScanner = new Scanner(System.in);
+      LegalCase legalcase = new LegalCase(testScanner, new PrintStream(outContent));
+      System.setOut(new PrintStream(outContent));
+      boolean result = LegalCase.sortByID();
+      assertTrue(result);
+
+  }

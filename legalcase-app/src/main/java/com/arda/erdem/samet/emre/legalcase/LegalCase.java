@@ -1281,3 +1281,342 @@ if (!deletedCasesStack.isEmpty()) {
   * @note The method assumes the case ID exists in the hash table.
   * @see hashFunction(int) For calculating the hash index.
   */
+
+  public static void deleteFromHashTable(int caseID) {
+    int index = hashFunction(caseID);
+    if (hashTableProbing[index] == caseID) {
+        hashTableProbing[index] = -1; // Mark slot as empty
+        
+    }
+}
+    /**
+     * Deletes a legal case from the system.
+     * This method removes the case from the binary file, adds it to a stack for potential restoration,
+     * and updates the hash table to reflect the deletion.
+     *
+     * @return `true` if the case is successfully deleted, `false` if the case is not found.
+     *
+     * @steps
+     * 1. Prompt the user to enter a case ID.
+     * 2. Read all cases from the binary file and write non-matching cases to a temporary file.
+     * 3. If the case is found:
+     *    - Push it onto the stack for restoration.
+     *    - Delete it from the hash table.
+     *    - Replace the original file with the updated temporary file.
+     * 4. If the case is not found, display a message and delete the temporary file.
+     *
+     * @throws IOException If an error occurs during file operations.
+     * @throws ClassNotFoundException If the file contains incompatible or corrupted data.
+     *
+     * @note The method ensures the original file is not modified unless the operation is successful.
+     * @see pushDeletedCase(LegalCase) For storing the deleted case in a stack.
+     * @see deleteFromHashTable(int) For removing the case ID from the hash table.
+     */
+    public static boolean deleteCase() {
+        clearScreen();
+        Scanner scanner = new Scanner(System.in);
+
+        int id = -1; 
+        while (true) {
+            try {
+                out.print("Enter Case ID to delete: ");
+                id = scanner.nextInt(); 
+                scanner.nextLine(); 
+                break; 
+            } catch (InputMismatchException e) {
+                out.println("Invalid input! Please enter a valid numeric Case ID.");
+                scanner.nextLine(); 
+            }
+        }
+
+        File file = new File(FILE_NAME);
+        File tempFile = new File("temp.bin");
+
+        boolean found = false;
+
+        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file));
+             ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(tempFile))) {
+
+            while (true) {
+                try {
+                    LegalCase currentCase = (LegalCase) ois.readObject();
+
+                    if (currentCase.caseID == id) {
+                        found = true;
+                        pushDeletedCase(currentCase); 
+                        out.println("Case ID " + id + " deleted successfully.");
+                    } else {
+                        oos.writeObject(currentCase); 
+                    }
+
+                } catch (EOFException e) {
+                    break; 
+                }
+            }
+
+        } catch (IOException | ClassNotFoundException e) {
+            out.println("Error handling files: " + e.getMessage());
+        }
+
+        if (found) {
+            file.delete(); 
+            tempFile.renameTo(file); 
+            deleteFromHashTable(id); 
+        } else {
+            tempFile.delete(); // Geçici dosyayı sil
+            out.println("Case ID " + id + " not found.");
+        }
+
+        out.println("\nPlease press Enter to return to Case Tracking Menu...");
+        scanner.nextLine();
+
+        return found;
+    }
+
+    /**
+     * Restores the last deleted case from the stack.
+     * This method retrieves the most recently deleted `LegalCase` from the stack and appends it back to the binary file.
+     *
+     * @return `true` if the undo operation is successful, `false` if the stack is empty or an error occurs.
+     *
+     * @throws IOException If an error occurs during the file writing process.
+     *
+     * @note This method requires the `AppendableObjectOutputStream` class to handle appending without rewriting the file header.
+     * @see pushDeletedCase(LegalCase) For adding deleted cases to the stack.
+     */
+     public static boolean undoDeleteCase() {
+    if (deletedCasesStack.isEmpty()) {
+        out.println("No cases available to undo.");
+        return false;
+    }
+
+    LegalCase lastDeletedCase = deletedCasesStack.pop(); 
+    try (ObjectOutputStream oos = new AppendableObjectOutputStream(new FileOutputStream(FILE_NAME, true))) {
+        oos.writeObject(lastDeletedCase); 
+        out.println("Undo successful for Case ID: " + lastDeletedCase.caseID);
+        return true;
+    } catch (IOException e) {
+        out.println("Error undoing delete: " + e.getMessage());
+        return false;
+    }
+}
+
+     /**
+      * Views the last deleted case and offers the option to undo the deletion.
+      * This method retrieves and displays the details of the last deleted `LegalCase` from the stack.
+      * The user is prompted to confirm whether to restore the case.
+      *
+      * @return `true` if the undo operation is performed, `false` otherwise.
+      *
+      * @note If the stack is empty, an error message is displayed.
+      * @see undoDeleteCase() For performing the undo operation.
+      */
+     public static boolean incorrectDeletionCase() {
+    if (deletedCasesStack.isEmpty()) {
+        out.println("No deleted cases to view.");
+        return false;
+    }
+
+    LegalCase lastDeletedCase = deletedCasesStack.peek(); 
+    out.println("Last deleted case details:");
+    out.println("Case ID: " + lastDeletedCase.caseID);
+    out.println("Case Title: " + lastDeletedCase.title);
+
+
+    out.print("Do you want to undo the last deleted case? (y/n): ");
+    char confirmation = scanner.nextLine().toLowerCase().charAt(0);
+
+    if (confirmation == 'y') {
+        return undoDeleteCase(); 
+    } else {
+        out.println("Undo operation cancelled.");
+        return false;
+    }
+}
+
+     /**
+      * Checks if a specific case ID exists in the deleted cases stack.
+      * This method iterates through the stack to determine if the specified case ID matches any deleted case.
+      *
+      * @param caseID The unique identifier of the case to check.
+      * @return `true` if the case ID is found in the stack, `false` otherwise.
+      *
+      * @note The stack is used to store recently deleted cases for potential restoration.
+      */
+	public static boolean isDeleted(int caseID) {
+    for (LegalCase deletedCase : deletedCasesStack) {
+        if (deletedCase.caseID == caseID) {
+            return true; 
+        }
+    }
+    return false; 
+}
+	/**
+	 * Compares two dates in the "dd/MM/yyyy" format.
+	 * This method parses the input strings into `Date` objects and compares them using `Date.compareTo()`.
+	 *
+	 * @param date1 The first date string to compare.
+	 * @param date2 The second date string to compare.
+	 * @return A negative integer if `date1` is earlier than `date2`, zero if they are equal, 
+	 *         or a positive integer if `date1` is later than `date2`.
+	 *
+	 * @throws ParseException If the input date strings are not in the expected format.
+	 *
+	 * @note Invalid date strings result in a `0` return value, treating them as equal.
+	 */
+public static int compareDates(String date1, String date2) {
+    SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+    try {
+        Date d1 = sdf.parse(date1);
+        Date d2 = sdf.parse(date2);
+        return d1.compareTo(d2);
+    } catch (ParseException e) {
+        e.printStackTrace();
+        return 0; 
+    }
+}
+
+/**
+ * Maintains the max heap property for a given subtree in an array of `LegalCase` objects.
+ * This method ensures that the root of the subtree is the largest element by comparing the scheduled dates.
+ *
+ * @param cases The array of `LegalCase` objects.
+ * @param n The size of the heap.
+ * @param i The index of the root node of the subtree.
+ *
+ * @note This method uses the `compareDates` function to compare scheduled hearing dates.
+ * @see heapSort(LegalCase[]) For sorting the array using heap sort.
+ */
+public static void heapify(LegalCase[] cases, int n, int i) {
+    int largest = i; // Root
+    int left = 2 * i + 1; 
+    int right = 2 * i + 2; 
+
+    if (left < n && compareDates(cases[left].scheduled, cases[largest].scheduled) > 0) {
+        largest = left;
+    }
+
+    if (right < n && compareDates(cases[right].scheduled, cases[largest].scheduled) > 0) {
+        largest = right;
+    }
+
+    if (largest != i) {
+        LegalCase temp = cases[i];
+        cases[i] = cases[largest];
+        cases[largest] = temp;
+
+        
+        heapify(cases, n, largest);
+    }
+}
+
+/**
+ * Sorts an array of `LegalCase` objects by their scheduled hearing dates using heap sort.
+ * This method first builds a max heap and then repeatedly extracts the maximum element, rearranging the heap.
+ *
+ * @param cases The array of `LegalCase` objects to sort.
+ *
+ * @note The sorting is performed in-place, and the array is sorted in ascending order of scheduled hearing dates.
+ * @see heapify(LegalCase[], int, int) For maintaining the heap property.
+ */
+public static void heapSort(LegalCase[] cases) {
+    int n = cases.length;
+
+   
+    for (int i = n / 2 - 1; i >= 0; i--) {
+        heapify(cases, n, i);
+    }
+
+    
+    for (int i = n - 1; i > 0; i--) {
+        LegalCase temp = cases[0];
+        cases[0] = cases[i];
+        cases[i] = temp;
+
+        heapify(cases, i, 0);
+    }
+}
+
+/**
+ * Displays a sorted list of legal cases based on their scheduled hearing dates.
+ * This method reads cases from a binary file, sorts them using heap sort, and prints them in ascending order.
+ *
+ * @return `true` if the cases are successfully read and sorted, `false` if the file does not exist or an error occurs.
+ *
+ * @steps
+ * 1. Check if the file exists. If not, display an error message and exit.
+ * 2. Read all cases from the binary file into a list.
+ * 3. Convert the list to an array and sort it using `heapSort`.
+ * 4. Display the sorted cases, including their IDs and scheduled hearing dates.
+ *
+ * @throws IOException If an error occurs while reading the file.
+ * @throws ClassNotFoundException If the file contains incompatible or corrupted data.
+ *
+ * @note The file must contain serialized `LegalCase` objects.
+ * @see heapSort(LegalCase[]) For sorting the array of cases.
+ * @see compareDates(String, String) For comparing the scheduled dates.
+ */
+public static boolean caseDates() {
+    clearScreen();
+
+    File file = new File(FILE_NAME);
+    if (!file.exists()) {
+        out.println("Error: File does not exist. Please add cases first.");
+        return false;
+    }
+
+    List<LegalCase> caseList = new ArrayList<>();
+    try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
+        while (true) {
+            try {
+                LegalCase legalCase = (LegalCase) ois.readObject();
+                caseList.add(legalCase);
+            } catch (EOFException e) {
+                break; 
+            }
+        }
+    } catch (IOException | ClassNotFoundException e) {
+        
+        return false;
+    }
+
+    
+    LegalCase[] caseArray = caseList.toArray(new LegalCase[0]);
+    heapSort(caseArray);
+
+    
+    out.println("\n===== Sorted Case Dates =====\n");
+    for (LegalCase legalCase : caseArray) {
+        out.println("Case ID: " + legalCase.caseID);
+        out.println("Scheduled Hearing Date: " + legalCase.scheduled);
+        out.println("-----------------------------");
+    }
+
+    out.print("Please press Enter to return to the Case Tracking Menu...");
+	scanner.nextLine();
+    return true;
+}
+
+/**
+ * Represents the root node of the B+ tree.
+ * The root node is the entry point for all operations performed on the B+ tree, such as insertions and searches.
+ *
+ * @note Initially, the root is `null`, indicating an empty tree.
+ *       The root is updated during the insertion process when necessary.
+ */
+public static BPlusTreeNode root;
+
+/**
+ * Inserts a new key and associated legal case into the B+ tree.
+ * This method finds the appropriate leaf node for the given key, inserts the key and case,
+ * and handles node splitting if the leaf node exceeds the maximum capacity.
+ *
+ * @param key The key to insert into the B+ tree.
+ * @param newCase The `LegalCase` object associated with the key.
+ *
+ * @note If the tree is empty, this method initializes the root as a new leaf node.
+ * @note If node splitting occurs, the parent node is updated or a new root is created.
+ *
+ * @see insertInNode(BPlusTreeNode, int, LegalCase) For inserting key and case into a node.
+ * @see split(BPlusTreeNode, BPlusTreeNode) For handling node splits.
+ */

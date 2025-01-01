@@ -652,3 +652,336 @@
      *
      * @note If the table is full, an error message is displayed, and insertion is not performed.
      */
+
+     public static boolean quadraticProbing(int caseID) {
+        int index = hashFunction(caseID, TABLE_SIZE);
+        int i = 0;
+
+        while (i < TABLE_SIZE) {
+            int newIndex = (index + i * i) % TABLE_SIZE;
+
+            if (hashTableProbing[newIndex] == -1) { 
+                hashTableProbing[newIndex] = caseID;
+                out.printf("Case ID: %d inserted at Index: %d%n", caseID, newIndex);
+                   
+                return true;
+            }
+
+            i++; 
+        }
+
+        
+        return false;
+        
+    }
+
+    
+    /**
+     * Inserts a case ID into the hash table using progressive overflow for collision resolution.
+     * This method uses linear probing by incrementing the index one step at a time until an empty slot is found.
+     *
+     * @param caseID The unique identifier of the case to insert.
+     * @return `true` if the case ID is successfully inserted, `false` if the table is full.
+     *
+     * @note Progressive overflow may cause clustering, which can affect performance.
+     */
+    public static boolean progressiveOverflow(int caseID) {
+        int index = hashFunction(caseID);
+        int i = 0;
+
+        while (i < TABLE_SIZE) {
+            int newIndex = (index + i) % TABLE_SIZE;
+
+            if (hashTableProbing[newIndex] == -1) { 
+                hashTableProbing[newIndex] = caseID;
+                out.printf("Case ID: %d inserted at Index: %d (progressive overflow)%n", caseID, newIndex);
+                return true;
+            }
+
+            i++; 
+        }
+
+        
+        return false;
+    }
+
+    /**
+     * Computes the hash value for a given case ID using a simple modulo operation.
+     * The result determines the initial index in the hash table for the case ID.
+     *
+     * @param caseID The unique identifier of the case to be hashed.
+     * @return The computed hash value, which represents the index in the hash table.
+     *
+     * @note This function assumes that the hash table size (`TABLE_SIZE`) is a prime number
+     *       or appropriately chosen to reduce collisions.
+     */
+    private static int hashFunction(int caseID) {
+        return caseID % TABLE_SIZE;
+    }
+   
+    /**
+     * A static integer array representing the hash table for case IDs.
+     * Each index in the array corresponds to a slot in the hash table, where:
+     * - `-1` indicates the slot is empty.
+     * - Any positive integer represents an occupied slot with a stored case ID.
+     *
+     * @note The size of the table is determined by the constant `TABLE_SIZE`.
+     */
+     public static int[] hashTableProbing = new int[TABLE_SIZE]; 
+		
+     
+     /**
+      * Computes the index for a given case ID using double hashing.
+      * Double hashing combines two hash functions to minimize clustering and improve collision resolution.
+      *
+      * @param caseID The unique identifier of the case to insert.
+      * @param attempt The current attempt number, used to calculate the step size.
+      * @return The computed index in the hash table.
+      *
+      * @note The secondary hash function ensures a different step size for each case ID,
+      *       reducing the risk of collisions during multiple attempts.
+      * @see secondHashFunction(int caseID) For the implementation of the secondary hash function.
+      */
+     public static int doubleHashing(int caseID, int attempt) {
+         int primaryHash = hashFunction(caseID);       
+         int secondaryHash = secondHashFunction(caseID); 
+         return (primaryHash + attempt * secondaryHash) % TABLE_SIZE; // Double hashing
+     }
+     
+     /**
+      * Resolves collisions in the hash table using linear probing.
+      * Linear probing searches for the next available slot by incrementing the index sequentially.
+      *
+      * @param caseID The unique identifier of the case to insert.
+      * @return `true` if the case ID is successfully inserted.
+      *
+      * @note Linear probing may lead to clustering, where consecutive slots are occupied, reducing efficiency.
+      * @see doubleHashing(int caseID, int attempt) For an alternative collision resolution method.
+      */
+     public static boolean linearProbing(int caseID) {
+    	    int index = hashFunction(caseID); 
+    	    int i = 0;
+
+    	    
+    	    hashTableProbing[(index + i) % TABLE_SIZE] = caseID;
+
+    	   
+    	    out.printf("Case ID: %d ----- Inserted at Index: %d (linear probing)%n", caseID, (index + i) % TABLE_SIZE);
+
+    	    return true;
+    	}
+   
+     /**
+      * Computes the secondary hash value for double hashing.
+      * The secondary hash function ensures a non-zero step size for resolving collisions.
+      *
+      * @param caseID The unique identifier of the case to be hashed.
+      * @return The computed secondary hash value, which determines the step size.
+      *
+      * @note The step size is calculated using the formula `7 - (caseID % 7)`, where `7` is a prime number.
+      *       This ensures the step size is relatively prime to the hash table size (`TABLE_SIZE`).
+      */
+     public static int secondHashFunction(int caseID) {
+         return 7 - (caseID % 7); 
+     }
+     
+     /**
+      * @brief Inserts a case ID into the hash table using double hashing for collision resolution.
+      *
+      * @details
+      * Double hashing ensures efficient collision handling by combining two hash functions.
+      * The primary hash determines the initial index, and the secondary hash provides a step size
+      * for resolving collisions. The function iterates until an empty slot is found or the table is full.
+      *
+      * @param caseID The unique ID of the case to be inserted into the hash table.
+      * 
+      * @return 
+      * - **`true`**: If the case ID is successfully inserted into the table.
+      * - **`false`**: If the hash table is full and no empty slot is available.
+      *
+      * @note
+      * - Ensure the hash table size is prime to maximize the effectiveness of double hashing.
+      * - The `secondHashFunction` must always return a non-zero value to avoid infinite loops.
+      */
+     public static boolean doubleHashingInsert(int caseID) {
+         int index = hashFunction(caseID); 
+         int stepSize = secondHashFunction(caseID); 
+         int i = 0;
+
+         
+         while (hashTableProbing[(index + i * stepSize) % TABLE_SIZE] != -1) {
+             i++; 
+             if (i >= TABLE_SIZE) {
+                 
+                 return false; 
+             }
+        
+    
+         hashTableProbing[(index + i * stepSize) % TABLE_SIZE] = caseID;
+
+       
+         out.printf("Case ID: %d ----- Inserted at Index: %d (double hashing)%n", caseID, (index + i * stepSize) % TABLE_SIZE);
+
+         return true;
+     }
+
+         
+         hashTableProbing[(index + i * stepSize) % TABLE_SIZE] = caseID;
+         
+
+        
+         out.printf("Case ID: %d ----- Inserted at Index: %d (double hashing)%n", caseID, (index + i * stepSize) % TABLE_SIZE);
+
+         return true;
+     }
+    
+     /**
+      * Checks whether the hash table is completely occupied.
+      * Iterates through all slots in the hash table to determine if there is any empty space.
+      *
+      * @return `true` if all slots are occupied, `false` if there is at least one empty slot.
+      */
+     public static boolean isHashTableFull() {
+         for (int i = 0; i < TABLE_SIZE; i++) {
+             if (hashTableProbing[i] == -1) {
+                 return false; 
+             }
+         }
+         return true; 
+     
+     }
+     
+     /**
+      * Inserts a new case into the hash table using linear probing for collision resolution.
+      * Searches for the first available slot starting from the computed hash index.
+      *
+      * @param newCase The `LegalCase` object to insert into the hash table.
+      *
+      * @note This method updates the hash table to associate the given case ID with an available slot.
+      */
+     public static void insertIntoHashTable(LegalCase newCase) {
+    	    int index = hashFunction(newCase.caseID); 
+
+    	   
+    	    while (hashTableProbing[index] != -1) {
+    	        index = (index + 1) % TABLE_SIZE;
+    	    }
+
+    	    
+    	    hashTableProbing[index] = newCase.caseID;
+
+    	    
+    	}
+
+     /**
+      * A custom implementation of `ObjectOutputStream` that allows appending to existing files.
+      * This class overrides the stream header writing mechanism to ensure compatibility with
+      * previously written objects in the same file.
+      *
+      * @note This class is useful for managing serialized objects in files without overwriting
+      *       the existing data.
+      */
+     public static class AppendableObjectOutputStream extends ObjectOutputStream {
+    	 /**
+    	     * Constructs a new `AppendableObjectOutputStream` with the specified output stream.
+    	     *
+    	     * @param out The output stream to which objects are written.
+    	     * @throws IOException If an I/O error occurs while creating the stream.
+    	     */
+    	 
+    	 
+    	    public AppendableObjectOutputStream(OutputStream out) throws IOException {
+    	        super(out);
+    	    }
+    	    
+    	    /**
+    	     * Overrides the default stream header writing behavior to support appending.
+    	     *
+    	     * @throws IOException If an I/O error occurs while resetting the stream.
+    	     */
+    	    
+    	    
+    	    @Override
+    	    protected void writeStreamHeader() throws IOException {
+    	        
+    	        reset();
+    	    }
+    	}
+     
+     /**
+      * Appends a `LegalCase` object to a binary file.
+      * This method writes the provided `LegalCase` object to the specified file in binary format.
+      * If the file already exists, it prevents the header from being rewritten to avoid data corruption.
+      * Otherwise, it writes the full header for a new file.
+      *
+      * @param legalCase The `LegalCase` object to append to the file.
+      * @param fileName  The name of the file to which the case will be appended.
+      *
+      * @note The method uses the `AppendableObjectOutputStream` class to handle
+      *       appending without overwriting the file header when the file exists.
+      *
+      * @throws IOException If an I/O error occurs during the file writing process.
+      *
+      */
+     public static void appendCaseFile(LegalCase legalCase, String fileName) {
+         try {
+            
+             boolean fileExists = new File(fileName).exists();
+
+             try (FileOutputStream fos = new FileOutputStream(fileName, true);
+                  ObjectOutputStream oos = fileExists
+                          ? new AppendableObjectOutputStream(fos) 
+                          : new ObjectOutputStream(fos)) {      
+
+                
+                 oos.writeObject(legalCase);
+             }
+
+         } catch (IOException e) {
+             
+         }
+     }
+
+     /**
+      * Validates the format of a given date string.
+      * Checks whether the input date matches the "dd/mm/yyyy" format using a regular expression.
+      *
+      * @param date The date string to validate.
+      * @return `true` if the date matches the "dd/mm/yyyy" format, `false` otherwise.
+      *
+      *
+      * @note This method does not verify the logical validity of the date
+      *       (e.g., "31/02/2024" would pass this check but is not a valid calendar date).
+      */
+     public static boolean isValidDateFormat(String date) {
+    	    return date.matches("\\d{2}/\\d{2}/\\d{4}"); 
+    	}
+  
+     /**
+      * Adds a new legal case to the system.
+      * This method handles the input of case details, assigns a unique case ID using a selected collision resolution strategy,
+      * validates the input data (including dates), and schedules the hearing date automatically.
+      * The case is saved to a binary file and inserted into the hash table for efficient retrieval.
+      *
+      * @return `true` if the case is successfully added, `false` otherwise.
+      *
+      * @menuOptions
+      * - `1`: Quadratic Probing for collision resolution.
+      * - `2`: Progressive Overflow for collision resolution.
+      * - `3`: Linear Probing for collision resolution.
+      * - `4`: Double Hashing for collision resolution.
+      *
+      * @steps
+      * 1. Select a collision resolution strategy.
+      * 2. Generate a unique case ID.
+      * 3. Input case details, including title, plaintiff, defendant, type, and opening date.
+      * 4. Validate the date format and logical correctness.
+      * 5. Schedule the hearing date using the sparse matrix.
+      * 6. Save the case details to a file.
+      * 7. Insert the case into the hash table.
+      *
+      * @throws IOException If an error occurs while interacting with the file or input/output streams.
+      *
+      * @note The method ensures user input is validated at every step and provides retry prompts for invalid entries.
+      */
+     

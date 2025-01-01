@@ -319,3 +319,336 @@
       *       The method also clears any invalid data from the scanner buffer.
       */
      
+      public static int getInput() {
+        int choice;
+        while (true) {
+            if (scanner.hasNextInt()) {
+                choice = scanner.nextInt();
+                scanner.nextLine(); 
+                return choice;
+            } else {
+                out.println("Invalid choice! Please try again.");
+                scanner.nextLine(); 
+            }
+        }
+    }
+
+
+    /**
+     * @brief Sparse matrix for storing scheduled hearing dates.
+     *
+     * @details
+     * The `sparseMatrix` is a three-dimensional array used to track 
+     * the availability of hearing dates. It is organized by year, month, and day.
+     * Each entry in the matrix represents a specific day and contains an integer value:
+     * - `0`: The date is available.
+     * - `1`: The date is occupied.
+     *
+     * ### Structure:
+     * - Dimensions:
+     *   - First dimension: Years (e.g., `MAX_YEARS` specifies the range of years tracked).
+     *   - Second dimension: Months (1-12, representing January to December).
+     *   - Third dimension: Days (1-31, representing the days of each month).
+     *
+     * @note
+     * - The `MAX_YEARS`, `MAX_MONTHS`, and `MAX_DAYS` constants determine 
+     *   the maximum size of the matrix.
+     * - The sparse matrix is initialized to all zeros, indicating that 
+     *   all dates are initially available.
+     * - Ensure that valid ranges are maintained for months (1-12) and days (1-31) 
+     *   depending on the year and month.
+     *
+     * @see addCase() for date assignment logic.
+     */
+    private static int[][][] sparseMatrix = new int[MAX_YEARS][MAX_MONTHS][MAX_DAYS]; // Sparse matrix
+    
+    
+    /**
+     * Validates a given date based on predefined constraints.
+     * Checks whether the provided day, month, and year form a valid date.
+     * The method ensures that the day falls within 1-31, and the month falls within 1-12.
+     *
+     * @param day   The day of the date to validate (1-31).
+     * @param month The month of the date to validate (1-12).
+     * @param year  The year of the date to validate. The method assumes that the year is valid.
+     *
+     * @return `true` if the date is valid, `false` otherwise.
+     *
+     * @note This method does not account for leap years or month-specific day limits 
+     *       (e.g., February having 28 or 29 days).
+     */
+    
+    
+    public static boolean isValidDate(int day, int month, int year) {
+        if (month < 1 || month > MAX_MONTHS) { 
+            return false;
+        }
+        if (day < 1 || day > MAX_DAYS) { 
+            return false;
+        }
+        return true; 
+    }
+   
+    /**
+     * Initializes the given sparse matrix to mark all dates as unoccupied.
+     * This method sets every element of the provided 3D matrix to `0`, indicating
+     * that all dates are available and not scheduled.
+     *
+     * @param sparseMatrix A 3D integer array representing the sparse matrix where
+     *                     years, months, and days are indexed to manage dates.
+     *
+     * @note This method assumes the sparse matrix dimensions are predefined with
+     *       constants `MAX_YEARS`, `MAX_MONTHS`, and `MAX_DAYS`.
+     */
+    
+    
+    public static void initializeSparseMatrix(int[][][] sparseMatrix) {
+        for (int year = 0; year < MAX_YEARS; year++) {
+            for (int month = 0; month < MAX_MONTHS; month++) {
+                for (int day = 0; day < MAX_DAYS; day++) {
+                    sparseMatrix[year][month][day] = 0; 
+                }
+            }
+        }
+    }
+	
+    /**
+     * Finds the next available date in the sparse matrix and marks it as scheduled.
+     * This method searches through the sparse matrix to locate the first unoccupied date
+     * and assigns it to the `scheduledDate` array. The method also updates the matrix
+     * to mark the date as occupied.
+     *
+     * @param sparseMatrix A 3D integer array representing the sparse matrix where
+     *                     years, months, and days are indexed to manage dates.
+     *                     A value of `0` indicates availability, while `1` indicates occupancy.
+     * @param scheduledDate An integer array of size 3 used to store the scheduled date
+     *                      as [day, month, year]. The found date will be stored in this array.
+     *
+     * @note The year in the scheduled date starts from 2024 and is incremented based
+     *       on the sparse matrix indexing. The method uses the `isValidDate` function
+     *       to validate each candidate date.
+     * @note If no valid date is found, the array remains unchanged.
+     */
+    
+    private static void findNextAvailableDate(int[][][] sparseMatrix, int[] scheduledDate) {
+        for (int year = 0; year < sparseMatrix.length; year++) {
+            for (int month = 0; month < sparseMatrix[year].length; month++) {
+                for (int day = 0; day < sparseMatrix[year][month].length; day++) {
+                    if (sparseMatrix[year][month][day] == 0 && isValidDate(day + 1, month + 1, 2024 + year)) {
+                        sparseMatrix[year][month][day] = 1; 
+                        scheduledDate[0] = day + 1;        
+                        scheduledDate[1] = month + 1;      
+                        scheduledDate[2] = 2024 + year;   
+                        return;
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Displays the main menu of the Legal Case Tracker application.
+     * This method presents the user with several options, such as case tracking,
+     * document creation, and document management. The user can navigate the menu
+     * using numbered inputs. The menu loop continues until the user selects the exit option.
+     *
+     * @return `true` if the menu loop exits successfully.
+     * @throws IOException If an error occurs during input reading (e.g., using `System.in.read()`).
+     *
+     * @menuOptions
+     * - `1`: Navigate to the Case Tracking module.
+     * - `2`: Create a new document using the Create Document module.
+     * - `3`: View and manage existing documents using the Documents module.
+     * - `4`: Exit the application.
+     *
+     * @note The method uses the `clearScreen` method to clear the console between displays
+     *       for better readability.
+     * @note If an invalid choice is entered, the user is prompted to retry.
+     */
+    
+    public static boolean mainMenu() throws IOException {
+        initializeHashTable(hashTableProbing, TABLE_SIZE); 
+
+        int choice;
+
+        do {
+            clearScreen(); // clearScreen fonksiyonunu daha önce yazdığımız gibi kullanıyoruz
+            out.println("\n===== Legal Case Tracker Menu =====\n");
+            out.println("1. Case Tracking");
+            out.println("2. Create Document");
+            out.println("3. Documents");
+            out.println("4. Exit");
+            out.print("\nEnter your choice: ");
+
+            choice = getInput(); 
+
+            switch (choice) {
+                case 1:
+                    caseTracking(); 
+                    break;
+                case 2:
+                 createDocument(); 
+                    break;
+                case 3:
+                  documents(); 
+                    break;
+                case 4:
+                    out.println("Exiting...");
+                    break;
+                default:
+                    out.print("Invalid choice! Please press a key to continue: ");
+                    System.in.read();
+                    break;
+            }
+        } while (choice != 4);
+        return true;
+    }
+   
+    /**
+     * Displays the Case Tracking menu and handles user interactions.
+     * Allows the user to navigate through various case management options, including
+     * adding, deleting, and viewing cases, as well as sorting and handling related cases.
+     *
+     * @return `true` if the menu loop exits successfully.
+     *
+     * @menuOptions
+     * - `1`: Add a new case to the tracker.
+     * - `2`: Delete an existing case.
+     * - `3`: Restore an incorrectly deleted case.
+     * - `4`: Display current active cases.
+     * - `5`: View scheduled case dates.
+     * - `6`: Display the list of plaintiffs.
+     * - `7`: Explore cases that may be connected.
+     * - `8`: Investigate cases that may arise.
+     * - `9`: Sort cases by their ID.
+     * - `10`: Exit the Case Tracking menu.
+     *
+     * @note If an invalid choice is entered, the user is prompted to retry.
+     * @throws IOException If an error occurs while waiting for user input.
+     */
+    
+    public static boolean caseTracking() {
+        int choice;
+
+        do {
+            clearScreen(); 
+            out.println("\n===== Case Tracking Menu =====");
+            out.println("1. Add Case");
+            out.println("2. Delete Case");
+            out.println("3. Incorrect Deletion");
+            out.println("4. Current Cases");
+            out.println("5. Case Dates");
+            out.println("6. Plaintiffs");
+            out.println("7. Cases That May Be Connected");
+            out.println("8. Cases That May Arise");
+            out.println("9. Sort By ID");
+            out.println("10. Exit");
+            out.print("\nEnter your choice: ");
+
+            choice = getInput(); 
+
+            switch (choice) {
+                case 1:
+                 addCase();
+                    break;
+                case 2:
+                   deleteCase();
+                    break;
+                case 3:
+                  incorrectDeletionCase();
+                    break;
+                case 4:
+                	currentCases();
+                    break;
+                case 5:
+                    caseDates();
+                    break;
+                case 6:
+                    displayPlaintiffs();
+                    break;
+                case 7:
+                  casesThatMayBeConnectedMenu();
+                    break;
+                case 8:
+                  casesThatMayAriseMenu();
+                    break;
+                case 9:
+                    sortByID();
+                    break;
+                case 10:
+                    out.println("Exiting...");
+                    break;
+                default:
+                    out.print("Invalid choice! Please press a key to continue: ");
+                    try {
+                        System.in.read(); 
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    break;
+            }
+        } while (choice != 10);
+
+        return true;
+    }
+   
+    /**
+     * Calculates the hash value for a given case ID.
+     * This method uses a simple modulo operation to compute the index for the case ID
+     * in the hash table.
+     *
+     * @param caseID The unique identifier of the case.
+     * @param TABLE_SIZE The size of the hash table.
+     * @return The computed hash value, which is the index in the hash table.
+     */
+    
+    public static int hashFunction(int caseID, int TABLE_SIZE) {
+        return caseID % TABLE_SIZE;
+    }
+    
+    
+    /**
+     * @brief Size of the hash table used for storing case IDs.
+     *
+     * @details
+     * The `TABLE_SIZE` constant defines the fixed size of the hash table used 
+     * in the application. It is primarily used to determine the total number of 
+     * available slots in the hash table for storing and retrieving case IDs efficiently.
+     *
+     * ### Characteristics:
+     * - **Fixed Size**: The table size is set to `10000`.
+     * - **Purpose**: Ensures that the hash table has enough capacity to minimize collisions 
+     *   and maintain efficient lookup, insertion, and deletion operations.
+     *
+     * @note
+     * - A larger table size reduces the likelihood of collisions but increases memory usage.
+     * - The value of `TABLE_SIZE` should ideally be a prime number for better hash table distribution,
+     *   though in this case, it is not.
+     */
+    public static int TABLE_SIZE = 10000; 
+    
+    
+    /**
+     * Initializes the hash table by marking all slots as empty.
+     * This method sets each slot in the hash table array to `-1`, which indicates that
+     * the slot is unoccupied and ready for new entries.
+     *
+     * @param hashTableProbing The hash table array to initialize.
+     * @param TABLE_SIZE The total number of slots in the hash table.
+     *
+     * @note This method is typically called once during application startup.
+     */
+    public static void initializeHashTable(int[] hashTableProbing, int TABLE_SIZE) {
+        for (int i = 0; i < TABLE_SIZE; i++) {
+            hashTableProbing[i] = -1;  // -1 indicates that the slot is empty
+        } }
+    
+    /**
+     * Inserts a case ID into the hash table using quadratic probing for collision resolution.
+     * Quadratic probing resolves collisions by checking slots at progressively larger intervals.
+     *
+     * @param caseID The unique identifier of the case to insert.
+     * @return `true` if the case ID is successfully inserted, `false` if the table is full.
+     *
+     * @note If the table is full, an error message is displayed, and insertion is not performed.
+     */

@@ -985,3 +985,299 @@
       * @note The method ensures user input is validated at every step and provides retry prompts for invalid entries.
       */
      
+      public static boolean addCase() {
+        clearScreen();
+        initializeHashTable(hashTableProbing, TABLE_SIZE); 
+
+
+        Random rand = new Random();
+        int caseID;
+        int attempt = 0;
+        boolean inserted = false;
+
+        int choice;
+        do {
+            clearScreen();
+            out.println("----- Select Collision Resolution Strategy -----");
+            out.println("1- Quadratic Probing");
+            out.println("2- Progressive Overflow");
+            out.println("3- Linear Probing");
+            out.println("4- Double Hashing");
+            out.print("\nEnter your choice: ");
+            choice = getInput();
+
+            // Generate random Case ID
+            caseID = rand.nextInt(900000) + 100000;
+
+            switch (choice) {
+                case 1:
+                    inserted = quadraticProbing(caseID);
+                    break;
+                case 2:
+                    inserted = progressiveOverflow(caseID);
+                    break;
+                case 3:
+                    inserted = linearProbing(caseID);
+                    break;
+                case 4:
+                    inserted = doubleHashingInsert(caseID);
+                    break;
+            }
+            attempt++;
+        } while (!inserted && attempt < LegalCase.MAX_ATTEMPTS);
+
+        if (!inserted) {
+            
+            return false;
+        }
+
+        scanner.nextLine(); // Clear buffer
+        out.print("Enter Case Title: ");
+        String caseTitle = scanner.nextLine();
+
+        out.print("Plaintiff: ");
+        String plaintiff = scanner.nextLine();
+
+        out.print("Defendant: ");
+        String defendant = scanner.nextLine();
+
+        out.println("\nCase Types:");
+        out.println("- Criminal         - Civil         - Commercial        - Administrative");
+        out.println("- Divorce          - Custody       - Traffic           - Dismissal");
+        out.println("- Compensation     - Inheritance   - Title deed");
+        out.print("\nEnter Case Type: ");
+        String caseType = scanner.nextLine();
+
+        String date;
+        while (true) {
+            out.print("Date of Opening of the Case (dd/mm/yyyy): ");
+            date = scanner.nextLine();
+
+            
+            if (isValidDateFormat(date)) {
+                String[] parts = date.split("/");
+                if (parts.length == 3) {
+                    try {
+                        int day = Integer.parseInt(parts[0]);
+                        int month = Integer.parseInt(parts[1]);
+                        int year = Integer.parseInt(parts[2]);
+                        if (isValidDate(day, month, year)) {
+                            break; 
+                        } else {
+                            out.println("Invalid date! Please check the day, month, and year values.");
+         }
+                    } catch (NumberFormatException e) {
+                        
+                        
+                    }
+                } 
+            } else {
+                out.println("Invalid date format! Please enter the date in dd/mm/yyyy format.");
+            }
+        }
+
+
+        int[] scheduledDate = new int[3];
+        findNextAvailableDate(sparseMatrix, scheduledDate);
+
+        if (scheduledDate[0] == 0 && scheduledDate[1] == 0 && scheduledDate[2] == 0) {
+           
+            return false;
+        }
+
+        String scheduled = String.format("%02d/%02d/%d", scheduledDate[0], scheduledDate[1], scheduledDate[2]);
+
+        LegalCase newCase = new LegalCase(caseID, caseTitle,caseType, defendant,plaintiff,   date, scheduled);
+        
+
+      
+        appendCaseFile(newCase, FILE_NAME);
+
+        
+        insertIntoHashTable(newCase);
+
+        out.println("\nScheduled Hearing Date: " + scheduled);
+        out.print("Please press Enter to return to the Case Tracking Menu...");
+        scanner.nextLine();
+
+        return true;
+    }
+
+ /**
+  * Prints the details of a legal case.
+  * This method retrieves case details from a `CaseNode` object and displays them in a formatted manner.
+  *
+  * @param node The `CaseNode` object containing the legal case data to print.
+  * @return `true` after successfully printing the case details.
+  *
+  *
+  * @note The printed output includes the case ID, title, plaintiff, defendant, type, opening date, and scheduled hearing date.
+  */
+ public static boolean printCase(CaseNode node) {
+        out.println("\nCase ID: " + node.data.caseID);
+        out.println("Case Title: " + node.data.title);
+        out.println("Plaintiff: " + node.data.plaintiff);
+        out.println("Defendant: " + node.data.defendant);
+        out.println("Case Type: " + node.data.type);
+        out.println("Beginning Date: " + node.data.date);
+        out.println("Scheduled Hearing Date: " + node.data.scheduled);
+        out.println("-----------------------------");
+        return true;
+    }
+ 
+ /**
+  * Appends a new node to the end of a doubly linked list of legal cases.
+  * This method creates a new `CaseNode` containing the provided `LegalCase` object and adds it to the end of the list.
+  *
+  * @param head The head of the doubly linked list.
+  * @param data The `LegalCase` object to store in the new node.
+  * @return The head of the updated linked list.
+  *
+  *
+  * @note If the list is empty (`head == null`), the new node becomes the head of the list.
+  * @note This method maintains the doubly linked structure by updating the `prev` and `next` pointers accordingly.
+  */
+ public static CaseNode appendNode(CaseNode head, LegalCase data) {
+        CaseNode newNode = new CaseNode(data);
+
+        if (head == null) {
+            return newNode; 
+        } else {
+            CaseNode temp = head;
+            while (temp.next != null) {
+                temp = temp.next; 
+            }
+            temp.next = newNode; 
+            newNode.prev = temp; 
+            return head; 
+        }}
+ 
+ /**
+  * Displays a list of current legal cases stored in a binary file.
+  * This method reads all cases from the specified file, adds them to a doubly linked list, and allows the user to navigate through the cases.
+  *
+  * @return `true` if the cases are successfully loaded and displayed, `false` if the file does not exist or an error occurs.
+  *
+  * @steps
+  * 1. Check if the file exists. If not, display an error and exit.
+  * 2. Read all cases from the binary file and store them in a doubly linked list.
+  * 3. Allow the user to navigate the cases using the following options:
+  *    - `P` or `p`: Go to the previous case.
+  *    - `N` or `n`: Go to the next case.
+  *    - `Q` or `q`: Quit the navigation.
+  * 4. Handle invalid inputs gracefully by prompting the user to retry.
+  *
+  * @throws IOException If an error occurs while reading the file.
+  * @throws ClassNotFoundException If the file contains incompatible or corrupted data.
+  *
+  * @note The binary file must contain serialized `LegalCase` objects.
+  * @see appendNode(LegalCase, CaseNode) For adding cases to the doubly linked list.
+  * @see printCase(CaseNode) For displaying case details.
+  */
+ public static boolean currentCases() {
+
+        CaseNode head = null;
+        CaseNode currentNode = null;
+
+        File file = new File(FILE_NAME);
+        if (!file.exists()) {
+            out.println("Error: File does not exist. Please add cases first.");
+            return false;
+        }
+       
+
+        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(FILE_NAME))) {
+            out.println("\n===== Current Cases =====\n");
+
+           
+            while (true) {
+                try {
+                    LegalCase currentCase = (LegalCase) ois.readObject();
+                    head = appendNode(head, currentCase); 
+                } catch (EOFException e) {
+                    break; 
+                }
+            }
+
+            currentNode = head;
+            char choice;
+
+            while (true) {
+                clearScreen();
+                printCase(currentNode); 
+
+                out.println("Options:");
+                if (currentNode.prev != null) {
+                    out.println("P - Previous case");
+                }
+                if (currentNode.next != null) {
+                    out.println("N - Next case");
+                }
+                out.println("Q - Quit");
+                out.print("Enter your choice: ");
+                choice = scanner.next().charAt(0);
+
+                if (choice == 'P' || choice == 'p') {
+                    if (currentNode.prev != null) {
+                        currentNode = currentNode.prev; 
+                    }
+                } else if (choice == 'N' || choice == 'n') {
+                    if (currentNode.next != null) {
+                        currentNode = currentNode.next; 
+                    }
+                } else if (choice == 'Q' || choice == 'q') {
+                    break; 
+                } else {
+                    out.println("Invalid choice. Please try again.");
+                    out.print(" ");
+                    scanner.nextLine();
+                    out.print("");
+                    scanner.nextLine();
+                }
+            }
+
+        } catch (IOException | ClassNotFoundException e) {
+            
+        }
+
+        return true;
+    }
+
+ /**
+  * Pushes a deleted legal case onto the stack for restoration.
+  * This method adds the provided `LegalCase` object to the top of the stack for potential recovery.
+  *
+  * @param deletedCase The `LegalCase` object to push onto the stack.
+  *
+  * @note The stack is used as a temporary storage for recently deleted cases.
+  */
+ public static void pushDeletedCase(LegalCase deletedCase) {
+deletedCasesStack.push(deletedCase);
+ }
+
+ /**
+  * Pops the most recently deleted legal case from the stack.
+  * This method retrieves and removes the last deleted case from the stack for restoration.
+  *
+  * @return The `LegalCase` object representing the last deleted case, or `null` if the stack is empty.
+  *
+  * @note If the stack is empty, an error message is displayed.
+  */
+ public static LegalCase popDeletedCase() {
+if (!deletedCasesStack.isEmpty()) {
+    return deletedCasesStack.pop();
+} else {
+    out.println("No deleted cases available to restore.");
+    return null;
+}
+}
+ 
+ /**
+  * Deletes a case from the hash table based on its ID.
+  * This method marks the corresponding hash table slot as empty by setting it to `-1`.
+  *
+  * @param caseID The unique identifier of the case to delete.
+  *
+  * @note The method assumes the case ID exists in the hash table.
+  * @see hashFunction(int) For calculating the hash index.
+  */

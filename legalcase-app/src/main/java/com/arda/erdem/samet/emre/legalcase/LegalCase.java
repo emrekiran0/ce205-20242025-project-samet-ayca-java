@@ -1620,3 +1620,418 @@ public static BPlusTreeNode root;
  * @see insertInNode(BPlusTreeNode, int, LegalCase) For inserting key and case into a node.
  * @see split(BPlusTreeNode, BPlusTreeNode) For handling node splits.
  */
+
+ public static void insert(int key, LegalCase newCase) {
+    if (root == null) {
+        root = new BPlusTreeNode(true);
+        root.keys[0] = key;
+        root.cases[0] = newCase;
+        root.numKeys = 1;
+    } else {
+        BPlusTreeNode current = root;
+        BPlusTreeNode parent = null;
+
+        while (!current.isLeaf) {
+            parent = current;
+            int i;
+            for (i = 0; i < current.numKeys; i++) {
+                if (key < current.keys[i]) {
+                    break;
+                }
+            }
+            current = current.children[i];
+        }
+
+        insertInNode(current, key, newCase);
+        if (current.numKeys == BPlusTreeNode.MAX) {
+            split(parent, current);
+        }
+    }
+}
+
+/**
+ * Inserts a key and associated legal case into a specific B+ tree node.
+ * This method shifts existing keys and cases to create space for the new key and case,
+ * maintaining the sorted order of keys in the node.
+ *
+ * @param node The B+ tree node where the key and case will be inserted.
+ * @param key The key to insert.
+ * @param newCase The `LegalCase` object associated with the key.
+ *
+ * @note This method assumes that the node has space for at least one more key.
+ */
+private static void insertInNode(BPlusTreeNode node, int key, LegalCase newCase) {
+    int i = node.numKeys - 1;
+    while (i >= 0 && node.keys[i] > key) {
+        node.keys[i + 1] = node.keys[i];
+        node.cases[i + 1] = node.cases[i];
+        i--;
+    }
+    node.keys[i + 1] = key;
+    node.cases[i + 1] = newCase;
+    node.numKeys++;
+}
+
+/**
+ * Splits a B+ tree node into two nodes when it exceeds the maximum capacity.
+ * This method creates a new node, redistributes keys and cases between the original and new nodes,
+ * and updates the parent node to reflect the split.
+ *
+ * @param parent The parent node of the node being split. If `null`, a new root is created.
+ * @param node The B+ tree node to split.
+ *
+ * @note If the node is a leaf, the `next` pointer is updated to maintain the linked list structure of leaf nodes.
+ * @note If the node is the root, a new root node is created to accommodate the split.
+ *
+ * @see insertInNode(BPlusTreeNode, int, LegalCase) For updating the parent node during a split.
+ */
+static void split(BPlusTreeNode parent, BPlusTreeNode node) {
+    int midIndex = BPlusTreeNode.MAX / 2;
+    BPlusTreeNode newNode = new BPlusTreeNode(node.isLeaf);
+
+    newNode.numKeys = BPlusTreeNode.MAX - midIndex - 1;
+    for (int i = 0; i < newNode.numKeys; i++) {
+        newNode.keys[i] = node.keys[midIndex + 1 + i];
+        newNode.cases[i] = node.cases[midIndex + 1 + i];
+    }
+
+    if (!node.isLeaf) {
+        for (int i = 0; i <= newNode.numKeys; i++) {
+            newNode.children[i] = node.children[midIndex + 1 + i];
+        }
+    }
+
+    node.numKeys = midIndex;
+
+    if (node.isLeaf) {
+        newNode.next = node.next;
+        node.next = newNode;
+    }
+
+    if (parent == null) {
+        parent = new BPlusTreeNode(false);
+        parent.keys[0] = node.keys[midIndex];
+        parent.children[0] = node;
+        parent.children[1] = newNode;
+        parent.numKeys = 1;
+        root = parent;
+    } else {
+        insertInNode(parent, node.keys[midIndex], null);
+        for (int i = parent.numKeys; i > 0; i--) {
+            if (parent.children[i - 1] == node) {
+                parent.children[i] = newNode;
+                break;
+            }
+        }
+    }
+}
+
+/**
+ * Prints all legal cases in the B+ tree in sorted order based on case IDs.
+ * This method traverses the leaf nodes of the B+ tree and prints the details
+ * of all cases stored in the tree.
+ *
+ * @return `true` if cases are printed successfully, `false` if the tree is empty.
+ *
+ * @note The B+ tree must be populated with cases before calling this method.
+ */
+public static boolean printSortedCases() {
+    if (root == null) {
+        System.out.println("No cases to display.");
+        return false;
+    }
+
+    BPlusTreeNode current = root;
+    while (!current.isLeaf) {
+        current = current.children[0];
+    }
+
+    while (current != null) {
+        for (int i = 0; i < current.numKeys; i++) {
+            LegalCase legalCase = current.cases[i];
+            System.out.println("Case ID: " + legalCase.caseID);
+            System.out.println("Case Title: " + legalCase.title);
+            System.out.println("Plaintiff: " + legalCase.plaintiff);
+            System.out.println("Defendant: " + legalCase.defendant);
+            System.out.println("Case Type: " + legalCase.type);
+            System.out.println("Beginning Date: " + legalCase.date);
+            System.out.println("Scheduled Hearing Date: " + legalCase.scheduled);
+            System.out.println("-----------------------------");
+        }
+        current = current.next;
+    }
+	return true;
+}
+
+/**
+ * Sorts legal cases by their IDs and displays them in ascending order.
+ * This method reads all cases from a binary file, inserts them into a B+ tree,
+ * and prints the sorted cases using in-order traversal.
+ *
+ * @return `true` if cases are sorted and displayed successfully, `false` if the file does not exist or an error occurs.
+ *
+ * @throws IOException If an error occurs while reading the file.
+ * @throws ClassNotFoundException If the file contains incompatible or corrupted data.
+ *
+ * @see insert(int, LegalCase) For adding cases to the B+ tree.
+ * @see printSortedCases() For printing sorted cases.
+ */
+public static boolean sortByID() {
+    clearScreen();
+
+    File file = new File(FILE_NAME);
+    if (!file.exists()) {
+        System.out.println("Error: File does not exist. Please add cases first.");
+        return false;
+    }
+
+    try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
+        while (true) {
+            try {
+                
+                LegalCase legalCase = (LegalCase) ois.readObject();
+                LegalCase.insert(legalCase.caseID, legalCase);
+            } catch (EOFException e) {
+                break; 
+            }
+        }
+    } catch (IOException | ClassNotFoundException e) {
+        
+        return false;
+    }
+
+    
+    System.out.println("\n===== Sorted Case Dates =====\n");
+    LegalCase.printSortedCases();
+
+    System.out.print("Please press Enter to return to the Case Tracking Menu...");
+    scanner.nextLine();
+    return true;
+}
+
+    
+    static final String[] caseNames = {
+        "Criminal", "Civil", "Commercial", "Administrative",
+        "Divorce", "Custody", "Traffic", "Dismissal",
+        "Compensation", "Inheritance", "Title deed"};
+
+    /**
+     * Adds an edge between two vertices in an undirected graph.
+     * This method updates the adjacency list representation of the graph to reflect the connection.
+     *
+     * @param graph The `Graph` object representing the graph.
+     * @param src The source vertex of the edge.
+     * @param dest The destination vertex of the edge.
+     *
+     * @note The graph is assumed to use zero-based indexing for its vertices.
+     */
+    static void addEdge(Graph graph, int src, int dest) {
+        GraphNode newNode = new GraphNode(dest);
+        newNode.next = graph.adjLists[src];
+        graph.adjLists[src] = newNode;
+
+        newNode = new GraphNode(src);
+        newNode.next = graph.adjLists[dest];
+        graph.adjLists[dest] = newNode;
+    }
+
+    /**
+     * Performs Breadth-First Search (BFS) on a graph starting from a given vertex.
+     * This method traverses the graph to find and display all case types connected
+     * to the selected case type.
+     *
+     * @param graph The `Graph` object representing the graph.
+     * @param startCaseType The index of the case type to start the BFS traversal.
+     *
+     * @note This method resets the visited status of all vertices after traversal.
+     * @see addEdge(Graph, int, int) For adding edges to the graph.
+     */
+    static void BFS(Graph graph, int startCaseType) {
+        CustomQueue queue = new CustomQueue(graph.numVertices);
+
+        graph.visited[startCaseType] = true;
+        queue.enqueue(startCaseType);
+
+        out.println("Selected Case: " + caseNames[startCaseType]);
+        out.println("\nCases That May Be Related");
+        out.println("-----------------------------");
+
+        while (!queue.isEmpty()) {
+            int currentCase = queue.dequeue();
+            GraphNode temp = graph.adjLists[currentCase];
+
+            while (temp != null) {
+                int adjCase = temp.caseType;
+
+                if (!graph.visited[adjCase]) {
+                    out.println("** " + caseNames[adjCase]);
+                    graph.visited[adjCase] = true;
+                    queue.enqueue(adjCase);
+                }
+                temp = temp.next;
+            }
+        }
+
+       
+        for (int i = 0; i < graph.numVertices; i++) {
+            graph.visited[i] = false;
+        }
+    }
+
+    /**
+     * Displays a menu for exploring cases that may be connected.
+     * This method allows the user to select a case type and view all related case types
+     * using Breadth-First Search (BFS).
+     *
+     * @return `true` when the user chooses to return to the main menu.
+     *
+     * @steps
+     * 1. Initialize the graph with predefined case type connections.
+     * 2. Display the list of case types and prompt the user for a selection.
+     * 3. Perform BFS to find and display connected case types.
+     * 4. Allow the user to return to the main menu or make another selection.
+     *
+     * @note Predefined edges are added to the graph to establish connections between case types.
+     * @see BFS(Graph, int) For traversing the graph.
+     */
+    static boolean casesThatMayBeConnectedMenu() {
+        clearScreen(); 
+        int NUM_CASE_TYPES = caseNames.length;
+        Graph graph = new Graph(NUM_CASE_TYPES);
+
+        addEdge(graph, 4, 5); // Divorce - Custody
+        addEdge(graph, 4, 8); // Divorce - Compensation
+        addEdge(graph, 9, 10); // Inheritance - Title deed
+        addEdge(graph, 2, 1); // Commercial - Civil
+        addEdge(graph, 0, 7); // Criminal - Dismissal
+        addEdge(graph, 6, 0); // Traffic - Criminal
+
+        int choice;
+
+        while (true) {
+            
+            out.println("\n===== Cases That May Be Connected Menu =====");
+            for (int i = 0; i < NUM_CASE_TYPES; i++) {
+                out.println(i + ". " + caseNames[i]);
+            }
+            out.println(NUM_CASE_TYPES + ". Return to Main Menu"); 
+
+            out.print("Please Enter The Number Next To Your Case: ");
+
+            if (scanner.hasNextInt()) {
+                choice = scanner.nextInt();
+            } else {
+
+                out.println("Invalid input. Please enter a number.");
+                scanner.next(); 
+                continue;
+            }
+            clearScreen();
+            if (choice >= 0 && choice < NUM_CASE_TYPES) {
+                clearScreen(); 
+                BFS(graph, choice); 
+            } else if (choice == NUM_CASE_TYPES) {
+                return true; 
+            } else {
+                out.println("Invalid choice. Please try again.");
+            }
+        }
+    }
+    
+    /**
+     * The maximum number of case types supported in the system.
+     * This constant defines the size of the adjacency matrix and related structures
+     * used for managing case type relationships.
+     */
+        static final int MAX = 44;
+
+        /**
+         * A list of predefined case types for the system.
+         * This array contains all supported case types, represented by `CaseTypeForSCC` objects,
+         * each with a unique identifier and descriptive name.
+         *
+         * @note The identifiers are used for indexing purposes in graphs, adjacency matrices,
+         *       and other structures related to case type management.
+         * @note Duplicate names, such as "Divorce Cases" and "Custody Cases," are intentional to reflect
+         *       different contexts or scenarios in the system.
+         *
+         */
+        static final CaseTypeForSCC[] caseTypeSCC = {
+            new CaseTypeForSCC(0, "Administrative Cases"),
+            new CaseTypeForSCC(1, "Cancellation Cases"),
+            new CaseTypeForSCC(2, "Full Jurisdiction Cases"),
+            new CaseTypeForSCC(3, "Expropriation Cases"),
+            new CaseTypeForSCC(4, "Civil Cases"),
+            new CaseTypeForSCC(5, "Divorce Cases"),
+            new CaseTypeForSCC(6, "Alimony Cases"),
+            new CaseTypeForSCC(7, "Inheritance Cases"),
+            new CaseTypeForSCC(8, "Commercial Cases"),
+            new CaseTypeForSCC(9, "Debt Cases"),
+            new CaseTypeForSCC(10, "Bankruptcy Cases"),
+            new CaseTypeForSCC(11, "Tort Cases"),
+            new CaseTypeForSCC(12, "Criminal Cases"),
+            new CaseTypeForSCC(13, "Compensation Cases"),
+            new CaseTypeForSCC(14, "Insurance Cases"),
+            new CaseTypeForSCC(15, "Civil Liability Cases"),
+            new CaseTypeForSCC(16, "Compensation Cases"),
+            new CaseTypeForSCC(17, "Non-pecuniary Compensation Cases"),
+            new CaseTypeForSCC(18, "Pecuniary Compensation Cases"),
+            new CaseTypeForSCC(19, "Bodily Injury Compensation Cases"),
+            new CaseTypeForSCC(20, "Custody Cases"),
+            new CaseTypeForSCC(21, "Child Support Cases"),
+            new CaseTypeForSCC(22, "Parents Cases"),
+            new CaseTypeForSCC(23, "Change Of Residence Cases"),
+            new CaseTypeForSCC(24, "Divorce Cases"),
+            new CaseTypeForSCC(25, "Custody Cases"),
+            new CaseTypeForSCC(26, "Alimony Cases"),
+            new CaseTypeForSCC(27, "Compensation Cases"),
+            new CaseTypeForSCC(28, "Dismissal Cases"),
+            new CaseTypeForSCC(29, "Unjust Termination Cases"),
+            new CaseTypeForSCC(30, "Severance Pay Cases"),
+            new CaseTypeForSCC(31, "Reemployment Cases"),
+            new CaseTypeForSCC(32, "Inheritance Cases"),
+            new CaseTypeForSCC(33, "Land Registration Cases"),
+            new CaseTypeForSCC(34, "Testament Annulment Cases"),
+            new CaseTypeForSCC(35, "Rejection Inheritance Cases"),
+            new CaseTypeForSCC(36, "Title Deed Cases"),
+            new CaseTypeForSCC(37, "Border Dispute Cases"),
+            new CaseTypeForSCC(38, "Corruption Allegations Cases"),
+            new CaseTypeForSCC(39, "Faulty Registration Correction Cases"),
+            new CaseTypeForSCC(40, "Traffic Cases"),
+            new CaseTypeForSCC(41, "Non-pecuniary Compensation Cases"),
+            new CaseTypeForSCC(42, "Pecuniary Compensation Cases"),
+            new CaseTypeForSCC(43, "Inheritance Cases")
+        };
+
+        // Adjacency matrix
+        static int[][] adj = new int[MAX][MAX];
+
+        /**
+         * Adds an edge between two vertices in an adjacency matrix representation of a graph.
+         * This method updates the matrix to reflect the connection between the two vertices.
+         *
+         * @param u The source vertex of the edge.
+         * @param v The destination vertex of the edge.
+         *
+         * @note The graph is assumed to use zero-based indexing for its vertices.
+         */
+        static void addEdge(int u, int v) {
+            adj[u][v] = 1;
+        }
+
+        /**
+         * Displays the "Cases That May Arise" menu and handles user interaction.
+         * This method allows the user to select a case type and view related cases that may arise,
+         * based on predefined connections in the adjacency graph.
+         *
+         * @return `true` after displaying the related cases and waiting for user confirmation to return to the main menu.
+         *
+         * @steps
+         * 1. Initialize the graph by adding edges to represent relationships between case types.
+         * 2. Display the menu with available case type options.
+         * 3. Validate user input and determine the selected case type.
+         * 4. Show the selected case type and related cases that may arise.
+         *
+         * @note The adjacency graph is statically defined, and the related cases are determined by their predefined relationships.
+         * @see addEdge(int, int) For defining relationships between case types.
+         */

@@ -2431,3 +2431,457 @@ public static boolean sortByID() {
          * @note The binary file must contain serialized `LegalCase` objects for selection.
          * @see appendDocument(LegalCaseDocument) For saving the created document.
          */
+
+         public static boolean createDocument() {
+            clearScreen();
+
+            File file = new File(FILE_NAME);
+            if (!file.exists()) {
+                out.println("Error: File not found!");
+                out.println("Press Enter to return to the menu...");
+                scanner.nextLine(); 
+                return false;
+            }
+
+        
+            LegalCase selectedCase = null;
+
+            
+            try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
+                out.println("\n===== Current Cases =====");
+
+                while (true) {
+                    try {
+                        LegalCase currentCase = (LegalCase) ois.readObject();
+                        out.println("Case ID: " + currentCase.caseID);
+                        out.println("Title: " + currentCase.title);
+                        out.println("Plaintiff: " + currentCase.plaintiff);
+                        out.println("Defendant: " + currentCase.defendant);
+                        out.println("Type: " + currentCase.type);
+                        out.println("Date: " + currentCase.date);
+                        out.println("Scheduled: " + currentCase.scheduled);
+                        out.println("-----------------------------");
+                    } catch (EOFException e) {
+                        break;
+                    }
+                }
+            } catch (IOException | ClassNotFoundException e) {
+                out.println("Error reading cases: " + e.getMessage());
+                return false;
+            }
+
+            boolean validCaseID = false; 
+            int id = -1;
+
+            
+            while (!validCaseID) {
+                out.print("\nEnter Case ID to create a document for: ");
+                if (scanner.hasNextInt()) {
+                    id = scanner.nextInt();
+                    scanner.nextLine(); 
+
+                    
+                    try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
+                        while (true) {
+                            try {
+                                LegalCase currentCase = (LegalCase) ois.readObject();
+                                if (currentCase.caseID == id) {
+                                    selectedCase = currentCase;
+                                    validCaseID = true; 
+                                    break;
+                                }
+                            } catch (EOFException e) {
+                                break;
+                            }
+                        }
+                    } catch (IOException | ClassNotFoundException e) {
+                        
+                        return false;
+                    }
+
+                    if (!validCaseID) {
+                        out.println("Case ID not found! Please try again.");
+                    }
+                } else {
+                    out.println("Invalid input! Please enter a valid numeric Case ID.");
+                    scanner.next(); 
+                }
+            }
+
+           
+            clearScreen();
+            out.println("\n===== Selected Case =====");
+            out.println("Case ID: " + selectedCase.caseID);
+            out.println("Title: " + selectedCase.title);
+            out.println("Plaintiff: " + selectedCase.plaintiff);
+            out.println("Defendant: " + selectedCase.defendant);
+            out.println("Type: " + selectedCase.type);
+            out.println("Date: " + selectedCase.date);
+            out.println("Scheduled: " + selectedCase.scheduled);
+
+            out.print("Winner: ");
+            String winner = scanner.nextLine();
+
+            out.print("Loser: ");
+            String loser = scanner.nextLine();
+
+            out.print("Decision: ");
+            String decision = scanner.nextLine();
+
+            out.print("Sentence: ");
+            String sentence = scanner.nextLine();
+
+            LegalCaseDocument document = new LegalCaseDocument(
+                    selectedCase.caseID,
+                    selectedCase.title,
+                    selectedCase.plaintiff,
+                    selectedCase.defendant,
+                    winner,
+                    loser,
+                    decision,
+                    sentence
+            );
+
+            appendDocument(document);
+
+            out.println("Document created and saved successfully!");
+            out.println("Press Enter to return to the menu...");
+            scanner.nextLine();
+            return true;
+        }
+        
+        /**
+         * Displays a menu for document-related operations.
+         * This method provides options to view all documents, search for documents by case title,
+         * or search for documents by case ID.
+         *
+         * @return `true` after the user exits the menu.
+         *
+         * @menuOptions
+         * - `1`: View all documents.
+         * - `2`: Search for a document using a case title.
+         * - `3`: Search for a document using a case ID.
+         * - `4`: Exit the menu.
+         *
+         * @see allDocuments() For displaying all documents.
+         * @see searchingWithCaseTitle() For searching documents by title.
+         * @see searchByID() For searching documents by case ID.
+         */
+        public static boolean documents() {
+            int choice;
+
+            do {
+                clearScreen();
+                out.println("\n===== Case Tracking Menu =====");
+                out.println("1. All Documents");
+                out.println("2. Searching With Case Title");
+                out.println("3. Searching With ID");
+                out.println("4. Exit");
+                out.print("\nEnter your choice: ");
+
+                choice = getInput();
+
+                switch (choice) {
+                    case 1:
+                        allDocuments();
+                        break;
+                    case 2:
+                        searchingWithCaseTitle();
+                        break;
+                    case 3:
+                        searchByID();
+                        break;
+                    case 4:
+                        out.println("Exiting...");
+                        break;
+                    default:
+                        out.print("Invalid choice! Please press Enter to continue: ");
+                        scanner.nextLine(); 
+                        break;
+                }
+            } while (choice != 4);
+
+            return true;
+        }
+
+        /**
+         * Displays all legal case documents stored in the document file.
+         * This method reads and prints the details of all `LegalCaseDocument` objects from a binary file.
+         *
+         * @return `true` if the documents are displayed successfully, `false` if the document file does not exist or an error occurs.
+         *
+         * @throws IOException If an error occurs while reading the file.
+         * @throws ClassNotFoundException If the file contains incompatible or corrupted data.
+         *
+         * @note The document file must contain serialized `LegalCaseDocument` objects.
+         */
+        public static boolean allDocuments() {
+            clearScreen();
+
+            File docFile = new File(DOCUMENT_FILE_NAME);
+            if (!docFile.exists()) {
+                out.println("Error: Document file not found!");
+                return false;
+            }
+
+            out.println("\n===== All Documents =====\n");
+
+            try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(docFile))) {
+                while (true) {
+                    try {
+                        
+                        LegalCaseDocument document = (LegalCaseDocument) ois.readObject();
+
+                       
+                        out.println("Case ID: " + document.caseID);
+                        out.println("Title: " + document.title);
+                        out.println("Plaintiff: " + document.plaintiff);
+                        out.println("Defendant: " + document.defendant);
+                        out.println("Winner: " + document.winner);
+                        out.println("Loser: " + document.loser);
+                        out.println("Decision: " + document.decision);
+                        out.println("Sentence: " + document.sentence);
+                        out.println("-----------------------------");
+                    } catch (EOFException e) {
+                        break; 
+                    }
+                }
+            } catch (IOException | ClassNotFoundException e) {
+                
+                return false;
+            }
+
+            out.println("\nPress Enter to return to the menu...");
+            try {
+                new Scanner(System.in).nextLine(); 
+            } catch (Exception e) {
+                out.println("Error reading input.");
+            }
+
+            return true;
+        }
+   
+        /**
+         * Computes the Longest Prefix Suffix (LPS) array for the KMP algorithm.
+         * This method preprocesses the pattern to calculate the LPS array, which is used
+         * to optimize pattern matching in the KMP algorithm.
+         *
+         * @param pattern The pattern string for which the LPS array is computed.
+         * @param M The length of the pattern.
+         * @param lps The array to store the LPS values.
+         *
+         * @note This method is a helper function for the `KMPSearch` algorithm.
+         */
+    public static void computeLPSArray(String pattern, int M, int[] lps) {
+        int len = 0;
+        lps[0] = 0;
+        int i = 1;
+
+        while (i < M) {
+            if (pattern.charAt(i) == pattern.charAt(len)) {
+                len++;
+                lps[i] = len;
+                i++;
+            } else {
+                if (len != 0) {
+                    len = lps[len - 1];
+                } else {
+                    lps[i] = 0;
+                    i++;
+                }
+            }
+        }
+    }
+
+    /**
+     * Performs pattern matching using the Knuth-Morris-Pratt (KMP) algorithm.
+     * This method searches for the occurrence of a pattern string within a text string
+     * using an optimized prefix-suffix comparison.
+     *
+     * @param pattern The pattern string to search for.
+     * @param text The text string in which to search for the pattern.
+     * @return `true` if the pattern is found in the text, `false` otherwise.
+     *
+     * @see computeLPSArray(String, int, int[]) For computing the LPS array used in the search.
+     */
+    public static boolean KMPSearch(String pattern, String text) {
+        int M = pattern.length();
+        int N = text.length();
+        int[] lps = new int[M];
+
+        computeLPSArray(pattern, M, lps);
+
+        int i = 0; // index for text
+        int j = 0; // index for pattern
+
+        while (i < N) {
+            if (pattern.charAt(j) == text.charAt(i)) {
+                j++;
+                i++;
+            }
+
+            if (j == M) {
+                return true;
+            } else if (i < N && pattern.charAt(j) != text.charAt(i)) {
+                if (j != 0) {
+                    j = lps[j - 1];
+                } else {
+                    i++;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Searches for legal case documents by case title using the KMP algorithm.
+     * This method reads documents from a binary file, searches for matches
+     * with the given case title, and displays matching documents.
+     *
+     * @return `true` if the search is completed successfully, `false` if the document file does not exist or an error occurs.
+     *
+     * @steps
+     * 1. Prompt the user to input a case title for searching.
+     * 2. Validate the input and ensure it is not empty.
+     * 3. Read all documents from the binary file and check for title matches using `KMPSearch`.
+     * 4. Display matching documents or an appropriate message if no matches are found.
+     *
+     * @throws IOException If an error occurs while reading the file.
+     * @throws ClassNotFoundException If the file contains incompatible or corrupted data.
+     *
+     * @see KMPSearch(String, String) For matching the input title with document titles.
+     */
+    public static boolean searchingWithCaseTitle() {
+        clearScreen();
+
+        File file = new File("documents.bin");
+        if (!file.exists()) {
+            out.println("Error: Document file not found!");
+            return false;
+        }
+
+        out.print("Enter the Case Title to search: ");
+        String searchTitle = scanner.nextLine();
+
+        
+        while (searchTitle.isEmpty()) {
+        	clearScreen();
+            out.println("Invalid input! Please enter a valid case title.");
+            out.print("Enter the Case Title to search: ");
+            searchTitle = scanner.nextLine().trim();
+        }
+       
+        boolean found = false;
+        out.println("\n===== Search Results =====\n");
+
+        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
+            while (true) {
+                try {
+                    
+                    LegalCaseDocument document = (LegalCaseDocument) ois.readObject();
+
+                    
+                    if (KMPSearch(searchTitle.toLowerCase(), document.title.toLowerCase())) {
+                        out.println("Case ID: " + document.caseID);
+                        out.println("Title: " + document.title);
+                        out.println("Plaintiff: " + document.plaintiff);
+                        out.println("Defendant: " + document.defendant);
+                        out.println("Winner: " + document.winner);
+                        out.println("Loser: " + document.loser);
+                        out.println("Decision: " + document.decision);
+                        out.println("Sentence: " + document.sentence);
+                        out.println("-----------------------------");
+                        found = true;
+                    }
+                } catch (EOFException e) {
+                    break; 
+                }
+            }
+        } catch (IOException | ClassNotFoundException e) {
+           
+            return false;
+        }
+
+        if (!found) {
+        	clearScreen();
+            out.println("No matching case title found.");
+        }
+
+        out.println("Press Enter to return to the menu...");
+        scanner.nextLine(); 
+        return true;
+    }
+   
+    /**
+     * @brief An array to store `LegalCase` objects in the hash table.
+     *
+     * @details 
+     * This static array serves as the primary storage for `LegalCase` instances 
+     * within the hash table. Each index corresponds to a specific hash value calculated 
+     * by the hash function. It ensures efficient retrieval and management of case data.
+     *
+     * @note 
+     * The array size is determined by the `TABLE_SIZE` constant, which defines the maximum 
+     * capacity of the hash table.
+     */
+    public static LegalCase[] hashTableCases = new LegalCase[TABLE_SIZE]; 
+
+    /**
+     * Searches for a legal case in the hash table using linear probing.
+     * This method retrieves a `LegalCase` object if the given case ID exists in the hash table.
+     *
+     * @param caseID The unique identifier of the case to search for.
+     * @return The `LegalCase` object if found, or `null` if the case ID does not exist in the hash table.
+     *
+     * @note This method uses linear probing for collision resolution.
+     * @see hashFunction(int, int) For calculating the hash table index.
+     */
+    public static LegalCase searchInHashTable(int caseID) {
+        int index = hashFunction(caseID, TABLE_SIZE); 
+        int startIndex = index;
+
+        while (hashTableProbing[index] != -1) {
+            if (hashTableProbing[index] == caseID) {
+                return hashTableCases[index]; 
+            }
+            index = (index + 1) % TABLE_SIZE; 
+            if (index == startIndex) {
+                break; 
+            }
+        }
+        return null; 
+    }
+    
+    /**
+     * Searches for a legal case by ID in the hash table and the binary file.
+     * This method first attempts to find the case in the hash table and, if unsuccessful, searches the binary file.
+     *
+     * @return `true` if the case is found or the search is completed, `false` otherwise.
+     *
+     * @steps
+     * 1. Prompt the user to enter a case ID.
+     * 2. Search for the case in the hash table using `searchInHashTable`.
+     * 3. If not found, search the binary file for the case ID.
+     * 4. Display the case details if found; otherwise, notify the user.
+     *
+     * @throws IOException If an error occurs while reading the file.
+     * @throws ClassNotFoundException If the file contains incompatible or corrupted data.
+     *
+     * @see searchInHashTable(int) For searching the hash table.
+     * @see printCaseDetails(LegalCase) For displaying case details.
+     */
+    public static boolean searchByID() {
+        clearScreen();
+        int id = -1; 
+        while (true) {
+            out.print("Enter Case ID to search: ");
+            if (scanner.hasNextInt()) {
+                id = scanner.nextInt();
+                scanner.nextLine(); 
+                break; 
+            } else {
+            	clearScreen();
+                out.println("Invalid input! Please enter a valid numeric Case ID.");
+                scanner.nextLine(); 
+            }
+        }

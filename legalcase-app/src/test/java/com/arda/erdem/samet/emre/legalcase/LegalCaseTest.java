@@ -612,4 +612,235 @@ public class LegalCaseTest {
       assertTrue(result);
 
   }
+  @Test
+  public void testdisplayPlaintiffs() throws IOException {
+    
+      TestUtility.createTestCaseFile();
+      String input = "N\nP\nQ\n"; 
+      System.setIn(new ByteArrayInputStream(input.getBytes())); 
+      Scanner testScanner = new Scanner(System.in);
+      LegalCase legalcase = new LegalCase(testScanner, new PrintStream(outContent));
+      System.setOut(new PrintStream(outContent));
+      boolean result = LegalCase.displayPlaintiffs();
+      assertTrue(result);
+  }
+
+  @Test
+  public void testdisplayPlaintiffsNoAvailable() throws IOException {
+     
+      TestUtility.createTestCaseFile();
+      String input = "a\nP\nQ\n"; 
+      System.setIn(new ByteArrayInputStream(input.getBytes())); 
+      Scanner testScanner = new Scanner(System.in);
+      LegalCase legalcase = new LegalCase(testScanner, new PrintStream(outContent));
+      System.setOut(new PrintStream(outContent));
+      boolean result = LegalCase.displayPlaintiffs();
+      assertTrue(result);
+  }
+  
+  @Test
+  public void testdisplayNoPlaintiffs() throws IOException {
+    
+      TestUtility.createTestCaseFile();
+      String input = "N\nN\nN\nN\nN\nQ\n"; 
+      System.setIn(new ByteArrayInputStream(input.getBytes()));
+      Scanner testScanner = new Scanner(System.in);
+      LegalCase legalcase = new LegalCase(testScanner, new PrintStream(outContent));
+      System.setOut(new PrintStream(outContent));
+      boolean result = LegalCase.displayPlaintiffs();
+      assertTrue(result);
+  }
+ 
+  @Test
+  public void testCreateDocument() throws IOException {
+     
+      TestUtility.createTestCaseFile();
+      String input = "1\n\n\n\n\n\n"; 
+      System.setIn(new ByteArrayInputStream(input.getBytes())); 
+      Scanner testScanner = new Scanner(System.in);
+      LegalCase legalcase = new LegalCase(testScanner, new PrintStream(outContent));
+      System.setOut(new PrintStream(outContent));
+      boolean result = LegalCase.createDocument();
+      assertTrue(result); 
+}
+  
+  @Test
+  public void testCreateDocumenIDnotFound() throws IOException {
+     
+      TestUtility.createTestCaseFile();
+      String input = "18\n1\n\n\n\n\n\n"; 
+      System.setIn(new ByteArrayInputStream(input.getBytes())); 
+      Scanner testScanner = new Scanner(System.in);
+      LegalCase legalcase = new LegalCase(testScanner, new PrintStream(outContent));
+      System.setOut(new PrintStream(outContent));
+      boolean result = LegalCase.createDocument();
+      assertTrue(result); 
+}
+
+  @Test
+  public void testCreateDocumenIDnotnumeric() throws IOException {
+      
+      TestUtility.createTestCaseFile();
+      String input = "abc\n1\n\n\n\n\n\n"; 
+      System.setIn(new ByteArrayInputStream(input.getBytes())); 
+      Scanner testScanner = new Scanner(System.in);
+      LegalCase legalcase = new LegalCase(testScanner, new PrintStream(outContent));
+      System.setOut(new PrintStream(outContent));
+      boolean result = LegalCase.createDocument();
+      assertTrue(result); 
+}
+  
+  @Test
+  public void testCreateDocument_FileNotFound() {
+    
+      File file = new File(TestUtility.TEST_CASE_FILE);
+      if (file.exists()) {
+      
+      }
+      String input = "\n"; 
+      System.setIn(new ByteArrayInputStream(input.getBytes())); 
+      Scanner testScanner = new Scanner(System.in);
+      LegalCase legalcase = new LegalCase(testScanner, new PrintStream(outContent));
+      
+      System.setOut(new PrintStream(outContent));
+      ByteArrayOutputStream outContent = new ByteArrayOutputStream();
+      boolean result = LegalCase.createDocument();
+      assertFalse(result); 
+      
+  }
+  @Test
+  public void testIsFileEmpty_FileDoesNotExist() {
+      
+      File file = new File(TestUtility.TEST_CASE_FILE);
+      if (file.exists()) {
+          file.delete();
+      }
+      
+      boolean result = LegalCase.isFileEmpty(TestUtility.TEST_CASE_FILE);
+      assertTrue(result); 
+  }
+
+  @Test
+  public void testCreateDocument_Invalidİnput() throws IOException {
+      
+      TestUtility.createTestCaseFile();
+      String input = "sdf\1\n\n\n\n\n\n\n"; 
+      System.setIn(new ByteArrayInputStream(input.getBytes())); 
+      Scanner testScanner = new Scanner(System.in);
+      LegalCase legalcase = new LegalCase(testScanner, new PrintStream(outContent));
+      System.setOut(new PrintStream(outContent));
+      boolean result = LegalCase.createDocument();
+      assertFalse(result);
+  }
+
+
+  
+  @Test
+  public void testallDocuments() throws IOException {
+     
+      TestUtility.createTestCaseFile();
+      String input = "\n"; 
+      System.setIn(new ByteArrayInputStream(input.getBytes())); 
+      Scanner testScanner = new Scanner(System.in);
+      LegalCase legalcase = new LegalCase(testScanner, new PrintStream(outContent));
+      System.setOut(new PrintStream(outContent));
+      boolean result = LegalCase.allDocuments();
+      assertTrue(result); 
+}
+  
+  @Test
+  public void testAllDocuments_FileNotFound() {
+     
+      String tempFileName = "temp_document_file.bin";
+
+     
+      File tempFile = new File(tempFileName);
+      if (tempFile.exists()) {
+         
+      }
+
+     
+      String originalDocumentFileName = LegalCase.DOCUMENT_FILE_NAME;
+      LegalCase.DOCUMENT_FILE_NAME = tempFileName;
+
+      
+      ByteArrayOutputStream outContent = new ByteArrayOutputStream();
+      System.setOut(new PrintStream(outContent));
+
+    
+      boolean result = LegalCase.allDocuments();
+
+  
+      assertFalse(result); 
+      String output = outContent.toString();
+     
+  }
+  
+  
+  
+  
+  @Test
+  public void testsearchingWithCaseTitle() throws IOException {
+      
+      TestUtility.createTestCaseFile();
+      String input = "a\n\n"; 
+      System.setIn(new ByteArrayInputStream(input.getBytes())); 
+      Scanner testScanner = new Scanner(System.in);
+      LegalCase legalcase = new LegalCase(testScanner, new PrintStream(outContent));
+      System.setOut(new PrintStream(outContent));
+      boolean result = LegalCase.searchingWithCaseTitle();
+      assertTrue(result); 
+}
+  @Test
+  public void testComputeLPSArray() {
+      String pattern = "ABABCABAB";
+      int[] lps = new int[pattern.length()];
+      LegalCase.computeLPSArray(pattern, pattern.length(), lps);
+
+     
+      int[] expectedLPS = {0, 0, 1, 2, 0, 1, 2, 3, 4};
+      assertArrayEquals(expectedLPS, lps);
+  }
+
+  @Test
+  public void testKMPSearch_PatternFound() {
+      String pattern = "ABAB";
+      String text = "ABABDABACDABABCABAB";
+      assertTrue(LegalCase.KMPSearch(pattern, text)); 
+  }
+
+  @Test
+  public void testKMPSearch_PatternNotFound() {
+      String pattern = "XYZ";
+      String text = "ABABDABACDABABCABAB";
+      assertFalse(LegalCase.KMPSearch(pattern, text)); 
+  }
+
+  @Test
+  public void testsearchingWithCaseTitle_NoMatching() throws IOException {
+ 
+      TestUtility.createTestCaseFile();
+      String input = "x\n\n"; 
+      System.setIn(new ByteArrayInputStream(input.getBytes())); 
+      Scanner testScanner = new Scanner(System.in);
+      LegalCase legalcase = new LegalCase(testScanner, new PrintStream(outContent));
+      System.setOut(new PrintStream(outContent));
+      boolean result = LegalCase.searchingWithCaseTitle();
+      assertTrue(result); 
+}
+  
+  @Test
+  public void testsearchingWithCaseTitlefirstEnter() throws IOException {
+     
+      TestUtility.createTestCaseFile();
+      String input = "\n\\a\n\n"; 
+      System.setIn(new ByteArrayInputStream(input.getBytes())); 
+      Scanner testScanner = new Scanner(System.in);
+      LegalCase legalcase = new LegalCase(testScanner, new PrintStream(outContent));
+      System.setOut(new PrintStream(outContent));
+      boolean result = LegalCase.searchingWithCaseTitle();
+      String output = outContent.toString();
+      assertTrue(output.contains("Invalid input! Please enter a valid case title."));
+      assertTrue(output.contains("Enter the Case Title to search: "));
+}
   

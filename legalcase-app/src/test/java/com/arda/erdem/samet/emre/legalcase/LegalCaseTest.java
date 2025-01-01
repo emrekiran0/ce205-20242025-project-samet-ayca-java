@@ -377,3 +377,239 @@ public class LegalCaseTest {
       assertTrue(result);
 
   }
+  @Test
+  public void testPrintSortedCases() throws IOException, ClassNotFoundException {
+      
+	  LegalCase.FILE_NAME = TestUtility.TEST_CASE_FILE;
+      TestUtility.createTestCaseFile();
+      
+      try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(TestUtility.TEST_CASE_FILE))) {
+          while (true) {
+              try {
+                  LegalCase legalCase = (LegalCase) ois.readObject();
+                  LegalCase.insert(legalCase.caseID, legalCase);
+              } catch (EOFException e) {
+                  break; 
+              }
+          }
+      }
+      
+      ByteArrayOutputStream outContent = new ByteArrayOutputStream();
+      System.setOut(new PrintStream(outContent));
+      
+      boolean result = LegalCase.printSortedCases();
+     
+      assertTrue(result);
+      
+      String output = outContent.toString();
+      assertTrue(output.contains("Case ID: 1"));
+  
+  }
+  
+  @Test
+  public void testSplitNode() {
+    
+      BPlusTreeNode root = new BPlusTreeNode(true);
+
+      
+      int maxKeys = BPlusTreeNode.MAX;
+      for (int i = 0; i < maxKeys; i++) {
+          LegalCase legalCase = new LegalCase(i, "Case" + i, "Plaintiff" + i, "Defendant" + i, "Type", "01/01/2023", "02/02/2023");
+          LegalCase.insert(i, legalCase);
+      }
+
+      
+      LegalCase extraCase = new LegalCase(maxKeys, "ExtraCase", "ExtraPlaintiff", "ExtraDefendant", "Type", "01/01/2024", "02/02/2024");
+      LegalCase.insert(maxKeys, extraCase);
+
+    
+      ByteArrayOutputStream outContent = new ByteArrayOutputStream();
+      System.setOut(new PrintStream(outContent));
+
+   
+      String output = outContent.toString();
+     
+  }
+
+  @Test
+  public void testSplitNodeWithParentAndNonLeaf() {
+    
+      BPlusTreeNode root = new BPlusTreeNode(false); 
+      BPlusTreeNode childNode = new BPlusTreeNode(true); 
+
+     
+      int maxKeys = BPlusTreeNode.MAX;
+      for (int i = 0; i < maxKeys; i++) {
+          childNode.keys[i] = i;
+          childNode.cases[i] = new LegalCase(i, "Case" + i, "Plaintiff" + i, "Defendant" + i, "Type", "01/01/2023", "02/02/2023");
+          childNode.numKeys++;
+      }
+
+     
+      root.children[0] = childNode;
+
+   
+      LegalCase.split(root, childNode);
+
+    
+      assertNotNull(root.children[1]); 
+      assertEquals(maxKeys / 2, childNode.numKeys); 
+      assertEquals(maxKeys - maxKeys / 2 - 1, root.children[1].numKeys); 
+  }
+
+  
+  @Test
+  public void testPrintSortedCasesRootNull() {
+     
+      LegalCase.root = null;
+
+      
+      ByteArrayOutputStream outContent = new ByteArrayOutputStream();
+      System.setOut(new PrintStream(outContent));
+
+     
+      boolean result = LegalCase.printSortedCases();
+
+      
+      assertFalse(result); 
+      String output = outContent.toString();
+      assertTrue(output.contains("No cases to display."));
+  }
+
+  @Test
+  public void testPrintSortedCasesNonLeafTraversal() {
+    
+      BPlusTreeNode rootNode = new BPlusTreeNode(false); 
+      BPlusTreeNode childNode = new BPlusTreeNode(true); 
+
+      
+      childNode.keys[0] = 1;
+      childNode.cases[0] = new LegalCase(1, "Case1", "Plaintiff1", "Defendant1", "Type", "01/01/2023", "02/02/2023");
+      childNode.numKeys = 1;
+
+     
+      rootNode.children[0] = childNode;
+      rootNode.numKeys = 1;
+      LegalCase.root = rootNode;
+
+      
+      ByteArrayOutputStream outContent = new ByteArrayOutputStream();
+      System.setOut(new PrintStream(outContent));
+
+    
+      boolean result = LegalCase.printSortedCases();
+
+      
+      assertTrue(result); 
+      String output = outContent.toString();
+      assertTrue(output.contains("Case ID: 1")); 
+  }
+
+  
+  @Test
+  public void testPrintSortedCasesFileNotFound() {
+      
+      LegalCase.FILE_NAME = "non_existent_file.bin";
+
+      ByteArrayOutputStream outContent = new ByteArrayOutputStream();
+      System.setOut(new PrintStream(outContent));
+
+      
+      boolean result = LegalCase.printSortedCases();
+
+     
+      assertFalse(result); 
+      String output = outContent.toString();
+  }
+
+
+  @Test
+  public void testSplitNonLeafNode() {
+      
+      BPlusTreeNode parentNode = new BPlusTreeNode(false); 
+      BPlusTreeNode childNode = new BPlusTreeNode(false); 
+      BPlusTreeNode grandChildNode1 = new BPlusTreeNode(true); 
+      BPlusTreeNode grandChildNode2 = new BPlusTreeNode(true); 
+
+     
+      childNode.children[0] = grandChildNode1;
+      childNode.children[1] = grandChildNode2;
+      childNode.numKeys = 2;
+
+      
+      parentNode.children[0] = childNode;
+
+      
+      for (int i = 0; i < BPlusTreeNode.MAX; i++) {
+          childNode.keys[i] = i;
+          childNode.cases[i] = new LegalCase(i, "Case" + i, "Plaintiff" + i, "Defendant" + i, "Type", "01/01/2023", "02/02/2023");
+      }
+      childNode.numKeys = BPlusTreeNode.MAX;
+
+    
+      LegalCase.split(parentNode, childNode);
+
+ 
+      assertNotNull(parentNode.children[1]);
+      assertNotNull(childNode.children[0]); 
+      assertNotNull(childNode.children[1]); 
+      assertFalse(childNode.isLeaf); 
+  }
+
+  
+  @Test
+  public void testcasesThatMayBeConnectedMenu() throws IOException {
+     
+      TestUtility.createTestCaseFile(); 
+      String input = "1\n\n11"; 
+      System.setIn(new ByteArrayInputStream(input.getBytes())); 
+      Scanner testScanner = new Scanner(System.in);
+      LegalCase legalcase = new LegalCase(testScanner, new PrintStream(outContent));
+      System.setOut(new PrintStream(outContent));
+      boolean result = LegalCase.casesThatMayBeConnectedMenu();
+      assertTrue(result);
+
+  }
+  
+  @Test
+  public void testcasesThatMayBeConnectedMenu_InvalidInput() throws IOException {
+      
+      TestUtility.createTestCaseFile(); 
+      String input = "17\n\1\n\n11"; 
+      System.setIn(new ByteArrayInputStream(input.getBytes())); 
+      Scanner testScanner = new Scanner(System.in);
+      LegalCase legalcase = new LegalCase(testScanner, new PrintStream(outContent));
+      System.setOut(new PrintStream(outContent));
+      boolean result = LegalCase.casesThatMayBeConnectedMenu();
+      assertTrue(result);
+
+  }
+  
+  @Test
+  public void testcasesThatMayAriseMenu() throws IOException {
+      
+      TestUtility.createTestCaseFile(); 
+      String input = "1\n\n"; 
+      System.setIn(new ByteArrayInputStream(input.getBytes())); 
+      Scanner testScanner = new Scanner(System.in);
+      LegalCase legalcase = new LegalCase(testScanner, new PrintStream(outContent));
+      System.setOut(new PrintStream(outContent));
+      boolean result = LegalCase.casesThatMayAriseMenu();
+      assertTrue(result);
+
+  }
+  
+  @Test
+  public void testcasesThatMayAriseMenu_InvalidInput() throws IOException {
+     
+      TestUtility.createTestCaseFile(); 
+      String input = "13\nasd\n1\n\n"; 
+      System.setIn(new ByteArrayInputStream(input.getBytes())); 
+      Scanner testScanner = new Scanner(System.in);
+      LegalCase legalcase = new LegalCase(testScanner, new PrintStream(outContent));
+      System.setOut(new PrintStream(outContent));
+      boolean result = LegalCase.casesThatMayAriseMenu();
+      assertTrue(result);
+
+  }
+  

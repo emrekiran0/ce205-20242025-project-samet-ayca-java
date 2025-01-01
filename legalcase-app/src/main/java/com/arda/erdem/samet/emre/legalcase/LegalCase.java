@@ -2035,3 +2035,399 @@ public static boolean sortByID() {
          * @note The adjacency graph is statically defined, and the related cases are determined by their predefined relationships.
          * @see addEdge(int, int) For defining relationships between case types.
          */
+
+         static boolean casesThatMayAriseMenu() {
+            clearScreen();
+
+            addEdge(0, 1);
+            addEdge(0, 2);
+            addEdge(0, 3);
+            addEdge(4, 5);
+            addEdge(4, 6);
+            addEdge(4, 7);
+            addEdge(8, 9);
+            addEdge(8, 10);
+            addEdge(8, 11);
+            addEdge(12, 13);
+            addEdge(12, 14);
+            addEdge(12, 15);
+            addEdge(16, 17);
+            addEdge(16, 18);
+            addEdge(16, 19);
+            addEdge(20, 21);
+            addEdge(20, 22);
+            addEdge(20, 23);
+            addEdge(24, 25);
+            addEdge(24, 26);
+            addEdge(24, 27);
+            addEdge(28, 29);
+            addEdge(28, 30);
+            addEdge(28, 31);
+            addEdge(32, 33);
+            addEdge(32, 34);
+            addEdge(32, 35);
+            addEdge(36, 37);
+            addEdge(36, 38);
+            addEdge(36, 39);
+            addEdge(40, 41);
+            addEdge(40, 42);
+            addEdge(40, 43);
+
+            out.println("===== Cases That May Arise Menu =====\n");
+
+            for (int i = 1; i <= 11; i++) {
+                out.println(i + "-) " + caseTypeSCC[(i - 1) * 4].name);
+            }
+
+            int caseChoice = -1;
+            boolean validInput = false;
+
+            
+            while (!validInput) {
+                out.print("Please Make Your Choice (1-11): ");
+                if (scanner.hasNextInt()) {
+                    caseChoice = scanner.nextInt();
+                    scanner.nextLine(); 
+                    if (caseChoice >= 1 && caseChoice <= 11) {
+                        validInput = true; 
+                    } else {
+                        out.println("Invalid choice. Please enter a number between 1 and 11.");
+                    }
+                } else {
+                    out.println("Invalid input! Please enter a valid numeric choice.");
+                    scanner.nextLine(); 
+                }
+            }
+
+           
+            clearScreen();
+            out.println("\nSelected Case Type: " + caseTypeSCC[(caseChoice - 1) * 4].name);
+            out.println("\nCases That May Arise:");
+
+            for (int i = (caseChoice - 1) * 4 + 1; i < MAX; i++) {
+                if (i % 4 == 0) break;
+                out.println("- " + caseTypeSCC[i].name);
+            }
+
+            out.println("\n\nPlease press Enter to return to the Case Tracking Menu...");
+            scanner.nextLine(); 
+
+            return true;
+        }
+
+        /**
+         * Retrieves the unique identifier for the legal case.
+         *
+         * @return The `caseID` of the legal case.
+         *
+         */
+        public int getCaseID() {
+            return caseID;
+        }
+
+        /**
+         * Retrieves the plaintiff's name for the legal case.
+         *
+         * @return The `plaintiff` associated with the legal case.
+         *
+         */
+        public String getPlaintiff() {
+            return plaintiff;
+        }
+       
+        /**
+         * Performs an XOR operation on two `PlaintiffNode` objects.
+         * This method calculates the XOR of the memory addresses of two nodes,
+         * which is used for maintaining a doubly linked XOR list.
+         *
+         * @param a The first `PlaintiffNode`.
+         * @param b The second `PlaintiffNode`.
+         * @return The result of the XOR operation, representing the combined link.
+         *
+         * @note If either `a` or `b` is `null`, the method returns the non-null node.
+         */
+        private static PlaintiffNode XOR(PlaintiffNode a, PlaintiffNode b) {
+            return (a == null ? b : (b == null ? a : new PlaintiffNode(null)));
+        }
+
+        /**
+         * Adds a new plaintiff node to the XOR linked list.
+         * This method creates a new `PlaintiffNode` with the given legal case data,
+         * links it to the existing list using XOR operations, and updates the head pointer.
+         *
+         * @param head The current head node of the XOR linked list.
+         * @param data The `LegalCase` object to associate with the new node.
+         * @return The updated head node of the XOR linked list.
+         *
+         *
+         * @note This method uses the `XOR` function to maintain the XOR linked list structure.
+         * @see XOR(PlaintiffNode, PlaintiffNode) For calculating XOR links.
+         */
+        public static PlaintiffNode addPlaintiffNode(PlaintiffNode head, LegalCase data) {
+            PlaintiffNode newNode = new PlaintiffNode(data);
+            newNode.xorLink = head;
+
+            if (head != null) {
+                head.xorLink = XOR(newNode, head.xorLink);
+            }
+
+            return newNode; 
+        }
+        
+        /**
+         * Prints the details of a plaintiff from a given plaintiff node.
+         * This method retrieves and displays the case ID and plaintiff name associated with the node.
+         *
+         * @param node The `PlaintiffNode` containing the legal case data to print.
+         *
+         * @note If the node or its data is `null`, a message is displayed indicating no plaintiff is found.
+         */
+        public static void printPlaintiff(PlaintiffNode node) {
+            if (node == null || node.data == null) {
+                out.println("No plaintiff found.");
+                return;
+            }
+            out.println("Case ID: " + node.data.getCaseID());
+            out.println("Plaintiff: " + node.data.getPlaintiff());
+            out.println("-----------------------------");
+        }
+
+        /**
+         * Displays a list of plaintiffs and their associated case IDs using an XOR linked list.
+         * This method reads legal cases from a binary file, constructs an XOR linked list of plaintiffs,
+         * and allows the user to navigate through the list interactively.
+         *
+         * @return `true` if plaintiffs are displayed successfully, `false` if no plaintiffs are found or an error occurs.
+         *
+         * @steps
+         * 1. Read all legal cases from the binary file.
+         * 2. Add each case to the XOR linked list using `addPlaintiffNode`.
+         * 3. If the list is empty, display an appropriate message.
+         * 4. Allow the user to navigate the list with the following options:
+         *    - `P`: Move to the previous plaintiff.
+         *    - `N`: Move to the next plaintiff.
+         *    - `Q`: Quit the navigation.
+         *
+         * @throws IOException If an error occurs while reading the file.
+         * @throws ClassNotFoundException If the file contains incompatible or corrupted data.
+         *
+         * @note The XOR linked list is traversed interactively based on user input.
+         * @see addPlaintiffNode(PlaintiffNode, LegalCase) For adding nodes to the XOR linked list.
+         * @see XOR(PlaintiffNode, PlaintiffNode) For computing XOR links between nodes.
+         * @see printPlaintiff(PlaintiffNode) For displaying plaintiff details.
+         */
+        public static boolean displayPlaintiffs() {
+            PlaintiffNode head = null;
+
+            
+            try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(FILE_NAME))) {
+                while (true) {
+                    try {
+                        LegalCase currentCase = (LegalCase) ois.readObject();
+                        if (currentCase != null) {
+                            head = addPlaintiffNode(head, currentCase); 
+                        }
+                    } catch (EOFException e) {
+                        break; 
+                    }
+                }
+            } catch (IOException | ClassNotFoundException e) {
+                out.println("Error reading cases: " + e.getMessage());
+                return false;
+            }
+
+            
+            if (head == null) {
+                out.println("No plaintiffs found.");
+                return false;
+            }
+
+          
+            PlaintiffNode current = head;
+            PlaintiffNode prev = null;
+            PlaintiffNode next;
+
+
+            while (current != null) {
+                clearScreen();
+                printPlaintiff(current);
+
+               
+                next = XOR(prev, current.xorLink);
+
+               
+                out.println("Options:");
+                if (prev != null) {
+                    out.println("P - Previous plaintiff"); 
+                }
+                if (next != null) {
+                    out.println("N - Next plaintiff"); 
+                }
+                out.println("Q - Quit");
+                out.print("Enter your choice: ");
+                char choice = scanner.next().charAt(0);
+
+                if (choice == 'P' || choice == 'p') {
+                    if (prev == null) {
+                        out.println("No previous plaintiff available.");
+                        pause();
+                    } else {
+                        PlaintiffNode temp = current;
+                        current = prev; 
+                        prev = XOR(temp, current.xorLink);
+                    }
+                } else if (choice == 'N' || choice == 'n') {
+                    if (next == null) {
+                        out.println("No next plaintiff available.");
+                        pause();
+                    } else {
+                        PlaintiffNode temp = current;
+                        prev = current;
+                        current = next; 
+                    }
+                } else if (choice == 'Q' || choice == 'q') {
+                    break; 
+                } else {
+                    out.println("Invalid choice. Please try again.");
+                    pause();
+                }
+            }
+
+            return true;
+        }
+
+        /**
+         * Pauses the execution and waits for the user to press Enter.
+         * This method is used to provide a break in the program flow and allow the user
+         * to review the current output before proceeding.
+         *
+         * @note This method ignores any I/O exceptions during execution.
+         */
+        private static void pause() {
+            out.println("\nPress Enter to continue...");
+            try {
+                System.in.read();
+            } catch (IOException ignored) {
+            }
+        }
+        
+        /**
+         * Represents a detailed legal case document.
+         * This class encapsulates the data for a legal case, including information about the winner,
+         * loser, decision, and sentence, in addition to basic case details.
+         *
+         * @implements Serializable To allow saving and loading of objects from binary files.
+         *
+         * @fields
+         * - `caseID`: The unique identifier of the case.
+         * - `title`: The title of the case.
+         * - `plaintiff`: The name of the plaintiff involved in the case.
+         * - `defendant`: The name of the defendant involved in the case.
+         * - `winner`: The name of the party who won the case.
+         * - `loser`: The name of the party who lost the case.
+         * - `decision`: The decision made in the case.
+         * - `sentence`: The sentence or resolution provided for the case.
+         */
+        public static class LegalCaseDocument implements Serializable {
+        	
+        	/**
+        	 * @brief Unique identifier for serialization.
+        	 *
+        	 * @details
+        	 * The `serialVersionUID` is a unique identifier used during the serialization and deserialization 
+        	 * process to verify that a loaded class corresponds to the serialized object. If no match is found, 
+        	 * an `InvalidClassException` is thrown.
+        	 *
+        	 * @note 
+        	 * - Always define `serialVersionUID` explicitly in a `Serializable` class to avoid issues 
+        	 *   during deserialization when the class structure changes.
+        	 * - The value can be generated automatically by the IDE or defined manually.
+        	 */
+            private static final long serialVersionUID = 1L;
+            int caseID;
+            String title, plaintiff, defendant, winner, loser, decision, sentence;
+
+            /**
+             * @brief Constructor for initializing a `LegalCaseDocument` object.
+             *
+             * @details
+             * Creates a new `LegalCaseDocument` instance with all relevant case details including
+             * the case ID, title, parties involved, and the legal outcome.
+             *
+             * @param caseID The unique identifier for the legal case.
+             * @param title The title of the legal case.
+             * @param plaintiff The name of the plaintiff in the case.
+             * @param defendant The name of the defendant in the case.
+             * @param winner The name of the winning party.
+             * @param loser The name of the losing party.
+             * @param decision The decision made in the case.
+             * @param sentence The sentence or judgment given for the case.
+             *
+             * @note This constructor is used to encapsulate all the essential details of a legal case 
+             * into a single object for storage or processing.
+             */
+            public LegalCaseDocument(int caseID, String title, String plaintiff, String defendant,
+                                     String winner, String loser, String decision, String sentence) {
+                this.caseID = caseID;
+                this.title = title;
+                this.plaintiff = plaintiff;
+                this.defendant = defendant;
+                this.winner = winner;
+                this.loser = loser;
+                this.decision = decision;
+                this.sentence = sentence;
+            }
+        }
+
+        /**
+         * Appends a legal case document to the document file.
+         * This method writes the provided `LegalCaseDocument` object to a binary file in append mode,
+         * preserving the existing data in the file.
+         *
+         * @param document The `LegalCaseDocument` object to save.
+         * @return `true` if the document is saved successfully, `false` otherwise.
+         *
+         * @throws IOException If an error occurs during file writing.
+         *
+         * @note This method uses `AppendableObjectOutputStream` to prevent overwriting the file header.
+         * @see AppendableObjectOutputStream For appending objects to a binary file.
+         */
+        public static boolean appendDocument(LegalCaseDocument document) {
+            try {
+                boolean fileExists = new File(DOCUMENT_FILE_NAME).exists();
+
+                try (FileOutputStream fos = new FileOutputStream(DOCUMENT_FILE_NAME, true);
+                     ObjectOutputStream oos = fileExists
+                             ? new AppendableObjectOutputStream(fos)
+                             : new ObjectOutputStream(fos)) {
+
+                    oos.writeObject(document);
+                }
+
+                out.println("Document saved successfully to " + DOCUMENT_FILE_NAME);
+            } catch (IOException e) {
+                
+            }
+			return false;
+        }
+
+        /**
+         * Creates a legal case document based on a selected case.
+         * This method allows the user to select an existing case by ID, input additional details such as the winner,
+         * loser, decision, and sentence, and save the document to a file.
+         *
+         * @return `true` if the document is created and saved successfully, `false` otherwise.
+         *
+         * @steps
+         * 1. Display all existing cases from the binary file.
+         * 2. Prompt the user to select a case by entering its ID.
+         * 3. Validate the input and ensure the case ID exists in the file.
+         * 4. Gather additional information (winner, loser, decision, and sentence) from the user.
+         * 5. Create a `LegalCaseDocument` object and save it using `appendDocument`.
+         *
+         * @throws IOException If an error occurs while reading or writing files.
+         * @throws ClassNotFoundException If the binary file contains incompatible or corrupted data.
+         *
+         * @note The binary file must contain serialized `LegalCase` objects for selection.
+         * @see appendDocument(LegalCaseDocument) For saving the created document.
+         */

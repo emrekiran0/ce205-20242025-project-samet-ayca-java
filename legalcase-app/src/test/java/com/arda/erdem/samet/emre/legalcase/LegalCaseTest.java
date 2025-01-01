@@ -1130,3 +1130,206 @@ public void testdocumentstosearchingWithCaseTitle() throws IOException {
     boolean result = LegalCase.documents();
     assertTrue(result); 
 }
+
+@Test
+  public void testdocumentsİnvalidInput() throws IOException {
+     
+      TestUtility.createTestCaseFile();
+      String input = "5\n\n\n4\n"; 
+      System.setIn(new ByteArrayInputStream(input.getBytes())); 
+      Scanner testScanner = new Scanner(System.in);
+      LegalCase legalcase = new LegalCase(testScanner, new PrintStream(outContent));
+      System.setOut(new PrintStream(outContent));
+      boolean result = LegalCase.documents();
+      assertTrue(result); 
+}
+  
+  
+  
+  @Test
+  public void testIsHashTableFull() {
+     
+      for (int i = 0; i < LegalCase.TABLE_SIZE; i++) {
+          LegalCase.hashTableProbing[i] = -1;
+      }
+     
+      assertFalse(LegalCase.isHashTableFull());
+     
+      for (int i = 0; i < LegalCase.TABLE_SIZE; i++) {
+          LegalCase.hashTableProbing[i] = i; 
+      }
+    
+      assertTrue(LegalCase.isHashTableFull());
+  }
+ 
+  
+  
+  @Test
+  public void testIsFileEmpty_FileExistsButEmpty() throws IOException {
+    
+      String tempFileName = "temp_empty_file.bin";
+
+      
+      File tempFile = new File(tempFileName);
+      try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(tempFile))) {
+          
+      }
+
+     
+      boolean result = LegalCase.isFileEmpty(tempFileName);
+
+      
+      assertTrue(result); 
+
+      
+      tempFile.delete();
+  }
+
+  @Test
+  public void testIsFileEmpty_FileExistsAndNotEmpty() throws IOException {
+      
+      String tempFileName = "temp_non_empty_file.bin";
+
+      
+      File tempFile = new File(tempFileName);
+      try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(tempFile))) {
+          oos.writeObject(new LegalCase(1, "Test Title", "John Doe", "Jane Smith", "Civil", "01/01/2023", "02/02/2023"));
+      }
+
+     
+      boolean result = LegalCase.isFileEmpty(tempFileName);
+
+
+      assertFalse(result);
+
+    
+      tempFile.delete();
+  }
+
+  @Test
+  public void testBPlusTreeInitialization() {
+      
+      BPlusTree tree = new BPlusTree();
+
+      
+      assertNull("The root of the B+ Tree should be null upon initialization.", tree.root);
+  }
+  
+  @Test
+  public void testLoginUserSuccess() throws IOException {
+      TestUtility.createTestUserFile(huffmanTree);
+
+      String input = "testUser\ntestPassword\n";
+      System.setIn(new ByteArrayInputStream(input.getBytes()));
+
+      Scanner testScanner = new Scanner(System.in);
+      LegalCase legalcase = new LegalCase(testScanner, System.out);
+
+      boolean result = LegalCase.loginUser();
+      assertFalse(result);
+  }
+
+  @Test
+  public void testRegisterUserSuccess() throws IOException {
+      TestUtility.createTestUserFile(huffmanTree);
+
+      String input = "testUser\ntestPassword\n";
+      System.setIn(new ByteArrayInputStream(input.getBytes())); 
+
+      Scanner testScanner = new Scanner(System.in);
+      LegalCase legalcase = new LegalCase(testScanner, System.out);
+
+      boolean result = LegalCase.registerUser();
+      assertTrue(result); 
+  }
+  
+  @Test
+  public void testMainEntrytoExit() throws IOException {
+	  String input = "3\n";
+      System.setIn(new ByteArrayInputStream(input.getBytes())); 
+      Scanner testScanner = new Scanner(System.in);
+      LegalCase legalcase = new LegalCase(testScanner, new PrintStream(outContent));
+      boolean result = legalcase.mainEntry();
+      assertFalse(result);
+  }
+  
+  @Test
+  public void testMainEntrytoInvalidChoice() throws IOException {
+	  String input = "4\n3\n";
+      System.setIn(new ByteArrayInputStream(input.getBytes())); 
+      Scanner testScanner = new Scanner(System.in);
+      LegalCase legalcase = new LegalCase(testScanner, new PrintStream(outContent));
+      boolean result = legalcase.mainEntry();
+      assertFalse(result);
+  }
+  
+  
+  @Test
+  public void testMainEntrytoInvalidChoice2() throws IOException {
+	  String input = "f\n3\n";
+      System.setIn(new ByteArrayInputStream(input.getBytes())); 
+      Scanner testScanner = new Scanner(System.in);
+      LegalCase legalcase = new LegalCase(testScanner, new PrintStream(outContent));
+      boolean result = legalcase.mainEntry();
+      assertFalse(result);
+  }
+  
+  
+  @Test
+  public void testMainEntrytoRegister() throws IOException {
+	  TestUtility.createTestUserFile(huffmanTree);
+	  String input = "1\n\testUser\ntestPassword\n3\n";
+      System.setIn(new ByteArrayInputStream(input.getBytes()));
+      Scanner testScanner = new Scanner(System.in);
+      LegalCase legalcase = new LegalCase(testScanner, new PrintStream(outContent));
+      boolean result = legalcase.mainEntry();
+      assertFalse(result);
+  }
+  
+  @Test
+  public void testMainEntrytoLogin() throws IOException {
+	  TestUtility.createTestUserFile(huffmanTree);
+	  String input = "2\ntestUser\ntestPassword\n3\n";
+      System.setIn(new ByteArrayInputStream(input.getBytes()));
+      Scanner testScanner = new Scanner(System.in);
+      LegalCase legalcase = new LegalCase(testScanner, new PrintStream(outContent));
+      boolean result = legalcase.mainEntry();
+      assertFalse(result);
+  }
+  
+  @Test
+  public void testMainSuccessfulLogin() throws IOException {
+      
+      String input = "1\nusername\npassword\n3\n"; 
+      System.setIn(new ByteArrayInputStream(input.getBytes()));
+
+   
+      LegalCaseApp.main(new String[]{});
+
+      
+      String output = outContent.toString();
+      assertTrue(output.contains("===== User Authentication System ====="));
+      assertTrue(output.contains("Enter username:"));
+      assertTrue(output.contains("Enter password:"));
+      assertTrue(output.contains("Exiting the application. Goodbye!"));
+  }
+
+  @Test
+  public void testMainExitWithoutLogin() throws IOException {
+     
+      String input = "3\n"; // 3: Exit
+      System.setIn(new ByteArrayInputStream(input.getBytes()));
+
+      
+      LegalCaseApp.main(new String[]{});
+
+     
+      String output = outContent.toString();
+      assertTrue(output.contains("===== User Authentication System ====="));
+      assertTrue(output.contains("Exiting the application. Goodbye!"));
+  }
+  
+  
+  
+}
+

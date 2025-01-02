@@ -889,6 +889,142 @@ public void testSearchInHashTable() {
     
     assertNull(LegalCase.searchInHashTable(999));
 }
+
+@Test
+public void testsearchByID_İnvalidİnput() throws IOException {
+   
+    TestUtility.createTestCaseFile();
+    String input = "x\n1\n\n"; 
+    System.setIn(new ByteArrayInputStream(input.getBytes()));
+    Scanner testScanner = new Scanner(System.in);
+    LegalCase legalcase = new LegalCase(testScanner, new PrintStream(outContent));
+    System.setOut(new PrintStream(outContent));
+    boolean result = LegalCase.searchByID();
+    assertTrue(result); 
+}
+
+
+@Test
+public void testdeleteCaset() throws IOException {
+    
+    TestUtility.createTestCaseFile();
+    String input = "1\n\n"; 
+    System.setIn(new ByteArrayInputStream(input.getBytes())); 
+    Scanner testScanner = new Scanner(System.in);
+    LegalCase legalcase = new LegalCase(testScanner, new PrintStream(outContent));
+    System.setOut(new PrintStream(outContent));
+    boolean result = LegalCase.deleteCase();
+    assertTrue(result); 
+}
+
+@Test
+public void testdeleteCase_InvalidInput() throws IOException {
+  
+    TestUtility.createTestCaseFile();
+    String input = "19\n\n";
+    System.setIn(new ByteArrayInputStream(input.getBytes())); 
+    Scanner testScanner = new Scanner(System.in);
+    LegalCase legalcase = new LegalCase(testScanner, new PrintStream(outContent));
+    System.setOut(new PrintStream(outContent));
+    boolean result = LegalCase.deleteCase();
+    assertFalse(result); 
+}
+
+@Test
+public void testdeleteCase_NonNumericInput() throws IOException {
+   
+    TestUtility.createTestCaseFile();
+    String input = "An\n1\n\n"; 
+    System.setIn(new ByteArrayInputStream(input.getBytes()));
+    Scanner testScanner = new Scanner(System.in);
+    LegalCase legalcase = new LegalCase(testScanner, new PrintStream(outContent));
+    System.setOut(new PrintStream(outContent));
+    boolean result = LegalCase.deleteCase();
+    assertFalse(result); 
+}
+
+@Test
+public void incorrectDeletionCase() throws IOException {
+ 
+    TestUtility.createTestCaseFile();
+    String input = "yn"; 
+    System.setIn(new ByteArrayInputStream(input.getBytes()));
+    Scanner testScanner = new Scanner(System.in);
+    LegalCase legalcase = new LegalCase(testScanner, new PrintStream(outContent));
+    System.setOut(new PrintStream(outContent));
+    boolean result = LegalCase.incorrectDeletionCase();
+    assertFalse(result); 
+}
+
+
+@Test
+public void testPopDeletedCase_WithPreloadedCases() {
+    
+    TestUtility.createTestCaseFile();
+    
+    
+    LegalCase testCase = new LegalCase(1, "Case1", "Plaintiff1", "Defendant1", "Type1", "01/01/2023", "05/05/2023");
+    LegalCase.deletedCasesStack.push(testCase);
+
+   
+    LegalCase result = LegalCase.popDeletedCase();
+    assertNotNull(result); 
+    assertEquals(1, result.caseID); 
+    assertTrue(LegalCase.deletedCasesStack.isEmpty()); 
+}
+
+@Test
+public void testIsDeleted_WithPreloadedCases() {
+   
+    TestUtility.createTestCaseFile();
+    
+
+    LegalCase testCase = new LegalCase(3, "Case3", "Plaintiff3", "Defendant3", "Type3", "03/01/2023", "07/07/2023");
+    LegalCase.deletedCasesStack.push(testCase);
+
+  
+    assertTrue(LegalCase.isDeleted(3)); 
+    
+}
+
+@Test
+public void testUndoDeleteCase_SuccessfulUndo() throws IOException, ClassNotFoundException {
+  
+    LegalCase case1 = new LegalCase(1, "Case1", "Plaintiff1", "Defendant1", "Type1", "01/01/2023", "05/05/2023");
+    LegalCase.pushDeletedCase(case1);
+    
+    ByteArrayOutputStream outContent = new ByteArrayOutputStream();
+    System.setOut(new PrintStream(outContent));
+    boolean result = LegalCase.undoDeleteCase();
+    String output = outContent.toString();
+    assertTrue(result);
+}
+
+
+@Test
+public void testDoubleHashingInsert() {
+   
+    LegalCase.TABLE_SIZE = 10;
+
+    LegalCase.hashTableProbing = new int[LegalCase.TABLE_SIZE];
+    for (int i = 0; i < LegalCase.TABLE_SIZE; i++) {
+        LegalCase.hashTableProbing[i] = -1;
+    }
+  
+    int caseID = 123456;
+    boolean result = LegalCase.doubleHashingInsert(caseID);
+    
+    assertTrue("Case ID should be successfully inserted into the hash table.", result);
+   
+    int expectedIndex = LegalCase.doubleHashing(caseID, 0);
+   
+    for (int i = 1; i < LegalCase.TABLE_SIZE; i++) {
+        LegalCase.doubleHashingInsert(caseID + i); 
+    }
+    
+    result = LegalCase.doubleHashingInsert(caseID + 1000);
+}
+
   
   
 }
